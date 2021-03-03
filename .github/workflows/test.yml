@@ -1,4 +1,4 @@
-name: ChatOps
+name: Test
 
 on:
   pull_request:
@@ -16,13 +16,3 @@ jobs:
           npm install
       - run: |
           npm run all
-
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ./
-        with:
-          token: ${{ github.token }}
-          project: chatops-action
-          processor: ${{ github.repository }}
