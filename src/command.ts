@@ -1,5 +1,6 @@
 import * as core from '@actions/core'
 import {Config} from './config'
+import * as commands from './commands'
 
 export interface Command {
   name: string
@@ -15,6 +16,10 @@ export interface CommandArg {
 export interface CommandContext {
   name: string
   args: string[]
+}
+
+export interface CommandHandler {
+  (commandContext: CommandContext, config: Config): void
 }
 
 export const getCommandContextFromString = (
@@ -33,6 +38,12 @@ export const getCommandContextFromString = (
   return {name: command.replace('/', ''), args}
 }
 
-export const handleCommand = (context: CommandContext, _config: Config) => {
-  core.debug(`Handling ${context.name}`)
+export const handleCommand: CommandHandler = (context, config) => {
+  const commandHandler = `handle${context.name.replace(/\b\w/g, l =>
+    l.toUpperCase()
+  )}Command`
+
+  // FIXME: avoid having type errors
+  // @ts-expect-error
+  commands[commandHandler](context, config)
 }
