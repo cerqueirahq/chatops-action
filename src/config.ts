@@ -14,7 +14,9 @@ export const getConfigFromInputs = (): Config => {
     token: core.getInput('token', {required: true}),
     project: core.getInput('project', {required: false}),
     processor: core.getInput('processor', {required: false}),
-    environments: JSON.parse(core.getInput('environments', {required: false}))
+    environments: JSON.parse(
+      core.getInput('environments', {required: false}) || '[]'
+    )
   }
 
   if (!config.project) {
