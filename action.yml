@@ -7,6 +7,14 @@ inputs:
     required: false
     description: A Personal Access Token to be used in every request to GitHub
 
+  event:
+    required: false
+    description: An event to be handled
+
+  context:
+    required: false
+    description: The context of an event (only required when handling events)
+
   project:
     required: false
     description: The project's name

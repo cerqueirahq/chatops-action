@@ -1,0 +1,26 @@
+name: Deploy
+
+on:
+  repository_dispatch:
+    types: [chatops-deploy]
+
+jobs:
+  start:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./
+        with:
+          token: ${{ github.token }}
+          event: deployment-in-progress
+          context: ${{ github.event.client_payload.chatops }}
+
+  finish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./
+        with:
+          token: ${{ github.token }}
+          event: deployment-success
+          context: ${{ github.event.client_payload.chatops }}

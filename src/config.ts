@@ -1,9 +1,11 @@
-import {Environment, getDefaultEnvironments} from './environment'
 import * as core from '@actions/core'
 import * as github from '@actions/github'
+import {Environment, getDefaultEnvironments} from './environment'
+import {Event, getEventFromInputs} from './event'
 
 export interface Config {
   token: string
+  event?: Event
   project: string
   processor: string
   environments: Environment[]
@@ -11,6 +13,7 @@ export interface Config {
 
 export const getConfigFromInputs = (): Config => {
   const config: Config = {
+    event: getEventFromInputs(),
     token: core.getInput('token', {required: true}),
     project: core.getInput('project', {required: false}),
     processor: core.getInput('processor', {required: false}),
