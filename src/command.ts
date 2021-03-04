@@ -35,6 +35,10 @@ export const getCommandContextFromString = (
 
   const [command, ...args] = firstLine.split(' ')
 
+  if (args[0] === 'help') {
+    return {name: 'help', args: [command.replace('/', '')]}
+  }
+
   return {name: command.replace('/', ''), args}
 }
 
