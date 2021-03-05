@@ -29,10 +29,30 @@ const getUsageTextForCommand = (cmd: Command): string => {
   `
 }
 
+const getCommandNotFoundText = (name: string) => {
+  return `
+  The command \`${name}\` doesn't exist. Here's a list of commands available:
+  
+  ${Object.keys(commands).map(key => {
+    // @ts-expect-error FIXME
+    const cmd = commands[key].command
+
+    return `* \`${cmd.name}\` -- ${cmd.description}`
+  })}
+
+  Comment \`/help [command]\` to get help for a particular command or \`/help\` for general usage.
+  `
+}
+
 export const handler: CommandHandler = async ({args, commentId}) => {
   if (args.length > 0) {
     // @ts-expect-error FIXME
-    const cmd = commands[args[0]].command
+    const cmd = commands[args[0]]?.command
+
+    if (!cmd) {
+      await updateComment(commentId, getCommandNotFoundText(args[0]))
+      return
+    }
 
     await updateComment(commentId, getUsageTextForCommand(cmd))
   }
