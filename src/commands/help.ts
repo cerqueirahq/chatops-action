@@ -33,7 +33,7 @@ const getUsageTextForCommand = (cmd: Command) => {
 export const handleHelpCommand: CommandHandler = async ({args, commentId}) => {
   if (args.length > 0) {
     // @ts-expect-error
-    const cmd = commands[args[0]]
+    const cmd = commands[args[0]].command
 
     await updateComment(commentId, getUsageTextForCommand(cmd))
   }
