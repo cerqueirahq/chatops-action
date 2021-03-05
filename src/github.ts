@@ -2,6 +2,15 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 import {Octokit} from '@octokit/core'
 
+export type GitHubDeploymentState =
+  | 'queued'
+  | 'in_progress'
+  | 'error'
+  | 'failure'
+  | 'inactive'
+  | 'pending'
+  | 'success'
+
 const octokit = new Octokit({
   auth: core.getInput('token', {required: true})
 })
@@ -30,4 +39,37 @@ export const dispatchRepositoryEvent = (
     repo,
     event_type: event
   })
+}
+
+export const createDeployment = (
+  environment: string,
+  ref: string,
+  description?: string
+) => {
+  const {owner, repo} = github.context.repo
+
+  return octokit.request('POST /repos/{owner}/{repo}/deployments', {
+    owner,
+    repo,
+    ref,
+    environment,
+    description
+  })
+}
+
+export const setDeploymentState = (
+  deploymentId: number,
+  state: GitHubDeploymentState
+) => {
+  const {owner, repo} = github.context.repo
+
+  return octokit.request(
+    'POST /repos/{owner}/{repo}/deployments/{deployment_id}/statuses',
+    {
+      owner,
+      repo,
+      state,
+      deployment_id: deploymentId
+    }
+  )
 }
