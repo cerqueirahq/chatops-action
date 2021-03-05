@@ -102,17 +102,19 @@ exports.command = {
     ]
 };
 const handler = ({ args, commentId }, { environments, processor }) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
     const environment = environments.find(env => env.id === args[0] || env.name === args[0]);
     if (!environment) {
         throw new Error(`The target environment "${args[0]}" is not configured.`);
     }
-    const deployment = yield github_1.createDeployment(environment.name, github.context.ref, '');
+    const ref = (_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.head.ref;
+    const deployment = yield github_1.createDeployment(environment.name, ref, `Triggered in PR #${(_b = github.context.payload.pull_request) === null || _b === void 0 ? void 0 : _b.number}`);
     // @ts-expect-error FIXME: figure out why `id` is not on data type
     const deploymentId = deployment.data.id;
     const [processorOwner, processorRepository] = processor.split('/');
     yield github_1.dispatchRepositoryEvent(processorOwner, processorRepository, 'chatops-deploy', { issueId: github.context.issue.number, commentId, deploymentId });
     yield github_1.setDeploymentState(deploymentId, 'pending', '', environment.url);
-    yield github_1.updateComment(commentId, `:clock1 Deployment of \`${github.context.ref}\` to \`${environment.name}\` has been queued...`);
+    yield github_1.updateComment(commentId, `:clock1 Deployment of \`${ref}\` to \`${environment.name}\` has been queued...`);
 });
 exports.handler = handler;
 
@@ -525,7 +527,7 @@ const dispatchRepositoryEvent = (owner, repo, event, payload) => {
     return octokit.request('POST /repos/{owner}/{repo}/dispatches', {
         owner,
         repo,
-        client_payload: payload,
+        client_payload: { chatops: payload },
         event_type: event
     });
 };
