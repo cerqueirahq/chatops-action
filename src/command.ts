@@ -28,7 +28,7 @@ export const getCommandContextFromString = (
   const firstLine = str.split(/\r?\n/)[0].trim()
 
   if (firstLine.length < 2 || firstLine.charAt(0) != '/') {
-    console.debug('The first line of the comment is not a valid slash command.')
+    core.debug('The first line of the comment is not a valid slash command.')
 
     return
   }
@@ -46,6 +46,12 @@ export const handleCommand: CommandHandler = (context, config) => {
   const commandHandler = `handle${context.name.replace(/\b\w/g, l =>
     l.toUpperCase()
   )}Command`
+
+  core.debug(
+    `Handling command ${context.name} with arguments: ${JSON.stringify(
+      context.args
+    )}`
+  )
 
   // FIXME: avoid having type errors
   // @ts-expect-error
