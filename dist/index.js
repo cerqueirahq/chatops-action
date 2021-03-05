@@ -30,7 +30,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.handleCommand = exports.getCommandContextFromString = void 0;
 const core = __importStar(__webpack_require__(2186));
 const commands = __importStar(__webpack_require__(8976));
-const getCommandContextFromString = (str) => {
+const getCommandContextFromString = (commentId, str) => {
     const firstLine = str.split(/\r?\n/)[0].trim();
     if (firstLine.length < 2 || firstLine.charAt(0) != '/') {
         core.debug('The first line of the comment is not a valid slash command.');
@@ -38,9 +38,9 @@ const getCommandContextFromString = (str) => {
     }
     const [command, ...args] = firstLine.split(' ');
     if (args[0] === 'help') {
-        return { name: 'help', args: [command.replace('/', '')] };
+        return { name: 'help', args: [command.replace('/', '')], commentId };
     }
-    return { name: command.replace('/', ''), args };
+    return { name: command.replace('/', ''), args, commentId };
 };
 exports.getCommandContextFromString = getCommandContextFromString;
 const handleCommand = (context, config) => {
@@ -80,8 +80,18 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.handleDeployCommand = void 0;
+exports.handleDeployCommand = exports.command = void 0;
 const core = __importStar(__webpack_require__(2186));
+exports.command = {
+    name: 'deploy',
+    description: 'Deploys the project to the specified environment',
+    args: [
+        {
+            name: 'env',
+            description: 'The environment to deploy the project to'
+        }
+    ]
+};
 const handleDeployCommand = () => {
     core.debug(`Handling /deploy command`);
 };
@@ -114,12 +124,52 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.handleHelpCommand = void 0;
-const core = __importStar(__webpack_require__(2186));
-const handleHelpCommand = () => {
-    core.debug(`Handling /help command`);
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
 };
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.handleHelpCommand = exports.command = void 0;
+const github_1 = __webpack_require__(5928);
+const commands = __importStar(__webpack_require__(8976));
+exports.command = {
+    name: 'help',
+    description: 'Displays usage information and commands',
+    args: [
+        {
+            name: 'command',
+            description: 'A command to get information about'
+        }
+    ]
+};
+const getUsageTextForCommand = (cmd) => {
+    return `
+  #### Name
+
+    ${cmd.name} -- ${cmd.description}
+
+  ### Arguments
+
+    ${cmd.args.map(arg => `* ${arg.name} -- ${arg.description}`).join('\n')}
+
+  #### Usage
+
+    \`/${cmd.name} ${cmd.args.map(arg => `[${arg.name}]`).join(' ')}\`
+  `;
+};
+const handleHelpCommand = ({ args, commentId }) => __awaiter(void 0, void 0, void 0, function* () {
+    if (args.length > 0) {
+        // @ts-expect-error FIXME
+        const cmd = commands[args[0]].command;
+        yield github_1.updateComment(commentId, getUsageTextForCommand(cmd));
+    }
+    // TODO: general usage
+});
 exports.handleHelpCommand = handleHelpCommand;
 
 
@@ -137,12 +187,22 @@ var __createBinding = (this && this.__createBinding) || (Object.create ? (functi
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
 }));
-var __exportStar = (this && this.__exportStar) || function(m, exports) {
-    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-__exportStar(__webpack_require__(8069), exports);
-__exportStar(__webpack_require__(8284), exports);
+exports.help = exports.deploy = void 0;
+exports.deploy = __importStar(__webpack_require__(8069));
+exports.help = __importStar(__webpack_require__(8284));
 
 
 /***/ }),
@@ -369,6 +429,52 @@ exports.handleDeploymentSuccess = handleDeploymentSuccess;
 
 /***/ }),
 
+/***/ 5928:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.updateComment = void 0;
+const core = __importStar(__webpack_require__(2186));
+const github = __importStar(__webpack_require__(5438));
+const core_1 = __webpack_require__(6762);
+const octokit = new core_1.Octokit({
+    auth: core.getInput('token', { required: true })
+});
+const updateComment = (commentId, body) => {
+    const { owner, repo } = github.context.repo;
+    return octokit.request(`PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}`, {
+        owner,
+        repo,
+        body,
+        comment_id: commentId
+    });
+};
+exports.updateComment = updateComment;
+
+
+/***/ }),
+
 /***/ 3109:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
@@ -421,7 +527,7 @@ function run() {
             const commentId = (_b = (_a = github.context) === null || _a === void 0 ? void 0 : _a.payload.comment) === null || _b === void 0 ? void 0 : _b.id;
             const commentBody = (_c = github.context.payload.comment) === null || _c === void 0 ? void 0 : _c.body;
             core.debug(`Comment ${commentId}: ${commentBody}`);
-            const commandContext = command_1.getCommandContextFromString(commentBody);
+            const commandContext = command_1.getCommandContextFromString(commentId, commentBody);
             if (!commandContext) {
                 core.debug('Neither a command or an event was detected... Skipping');
                 return;
