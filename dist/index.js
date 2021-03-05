@@ -107,10 +107,11 @@ const handler = ({ args, commentId }, { environments, processor }) => __awaiter(
         throw new Error(`The target environment "${args[0]}" is not configured.`);
     }
     const deployment = yield github_1.createDeployment(environment.name, github.context.ref, '');
-    const [processorOwner, processorRepository] = processor.split('/');
-    yield github_1.dispatchRepositoryEvent(processorOwner, processorRepository, 'chatops-deploy');
     // @ts-expect-error FIXME: figure out why `id` is not on data type
-    yield github_1.setDeploymentState(deployment.data.id, 'queued', '', environment.url);
+    const deploymentId = deployment.data.id;
+    const [processorOwner, processorRepository] = processor.split('/');
+    yield github_1.dispatchRepositoryEvent(processorOwner, processorRepository, 'chatops-deploy', { issueId: github.context.issue.number, commentId, deploymentId });
+    yield github_1.setDeploymentState(deploymentId, 'pending', '', environment.url);
     yield github_1.updateComment(commentId, `:clock1 Deployment of \`${github.context.ref}\` to \`${environment.name}\` has been queued...`);
 });
 exports.handler = handler;
@@ -520,10 +521,11 @@ const updateComment = (commentId, body) => {
     });
 };
 exports.updateComment = updateComment;
-const dispatchRepositoryEvent = (owner, repo, event) => {
+const dispatchRepositoryEvent = (owner, repo, event, payload) => {
     return octokit.request('POST /repos/{owner}/{repo}/dispatches', {
         owner,
         repo,
+        client_payload: payload,
         event_type: event
     });
 };
