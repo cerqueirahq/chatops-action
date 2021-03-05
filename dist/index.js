@@ -44,11 +44,10 @@ const getCommandContextFromString = (commentId, str) => {
 };
 exports.getCommandContextFromString = getCommandContextFromString;
 const handleCommand = (context, config) => {
-    const commandHandler = `handle${context.name.replace(/\b\w/g, l => l.toUpperCase())}Command`;
     core.debug(`Handling command ${context.name} with arguments: ${JSON.stringify(context.args)}`);
     // FIXME: avoid having type errors
     // @ts-expect-error
-    commands[commandHandler](context, config);
+    commands[context.name].handler(context, config);
 };
 exports.handleCommand = handleCommand;
 
@@ -80,7 +79,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.handleDeployCommand = exports.command = void 0;
+exports.handler = exports.command = void 0;
 const core = __importStar(__webpack_require__(2186));
 exports.command = {
     name: 'deploy',
@@ -92,10 +91,10 @@ exports.command = {
         }
     ]
 };
-const handleDeployCommand = () => {
+const handler = () => {
     core.debug(`Handling /deploy command`);
 };
-exports.handleDeployCommand = handleDeployCommand;
+exports.handler = handler;
 
 
 /***/ }),
@@ -134,7 +133,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.handleHelpCommand = exports.command = void 0;
+exports.handler = exports.command = void 0;
 const github_1 = __webpack_require__(5928);
 const commands = __importStar(__webpack_require__(8976));
 exports.command = {
@@ -162,7 +161,7 @@ const getUsageTextForCommand = (cmd) => {
     \`/${cmd.name} ${cmd.args.map(arg => `[${arg.name}]`).join(' ')}\`
   `;
 };
-const handleHelpCommand = ({ args, commentId }) => __awaiter(void 0, void 0, void 0, function* () {
+const handler = ({ args, commentId }) => __awaiter(void 0, void 0, void 0, function* () {
     if (args.length > 0) {
         // @ts-expect-error FIXME
         const cmd = commands[args[0]].command;
@@ -170,7 +169,7 @@ const handleHelpCommand = ({ args, commentId }) => __awaiter(void 0, void 0, voi
     }
     // TODO: general usage
 });
-exports.handleHelpCommand = handleHelpCommand;
+exports.handler = handler;
 
 
 /***/ }),
