@@ -59,7 +59,9 @@ export const createDeployment = (
 
 export const setDeploymentState = (
   deploymentId: number,
-  state: GitHubDeploymentState
+  state: GitHubDeploymentState,
+  targetURL: string,
+  environmentURL: string
 ) => {
   const {owner, repo} = github.context.repo
 
@@ -69,6 +71,8 @@ export const setDeploymentState = (
       owner,
       repo,
       state,
+      target_url: targetURL,
+      environment_url: environmentURL,
       deployment_id: deploymentId
     }
   )

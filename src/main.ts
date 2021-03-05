@@ -3,20 +3,21 @@ import * as github from '@actions/github'
 import {getCommandContextFromString, handleCommand} from './command'
 import {getConfigFromInputs} from './config'
 import {handleEvent} from './event'
+import {updateComment} from './github'
 
 async function run(): Promise<void> {
+  const config = getConfigFromInputs()
+  const commentId = github.context?.payload.comment?.id!
+
+  core.debug(`Using configuration: ${JSON.stringify(config, null, 2)}`)
+
   try {
-    const config = getConfigFromInputs()
-
-    core.debug(`Using configuration: ${JSON.stringify(config, null, 2)}`)
-
     if (config.event) {
       handleEvent(config)
 
       return
     }
 
-    const commentId = github.context?.payload.comment?.id!
     const commentBody: string = github.context.payload.comment?.body!
 
     core.debug(`Comment ${commentId}: ${commentBody}`)
@@ -32,6 +33,10 @@ async function run(): Promise<void> {
 
     core.debug('Hello, ChatOps!')
   } catch (error) {
+    if (commentId) {
+      await updateComment(commentId, error.message)
+    }
+
     core.setFailed(error.message)
   }
 }
