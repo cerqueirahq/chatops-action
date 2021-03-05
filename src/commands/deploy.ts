@@ -12,6 +12,6 @@ export const command: Command = {
   ]
 }
 
-export const handleDeployCommand: CommandHandler = () => {
+export const handler: CommandHandler = () => {
   core.debug(`Handling /deploy command`)
 }

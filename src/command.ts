@@ -45,10 +45,6 @@ export const getCommandContextFromString = (
 }
 
 export const handleCommand: CommandHandler = (context, config) => {
-  const commandHandler = `handle${context.name.replace(/\b\w/g, l =>
-    l.toUpperCase()
-  )}Command`
-
   core.debug(
     `Handling command ${context.name} with arguments: ${JSON.stringify(
       context.args
@@ -57,5 +53,5 @@ export const handleCommand: CommandHandler = (context, config) => {
 
   // FIXME: avoid having type errors
   // @ts-expect-error
-  commands[commandHandler](context, config)
+  commands[context.name].handler(context, config)
 }
