@@ -150,15 +150,15 @@ const getUsageTextForCommand = (cmd) => {
     return `
   #### Name
 
-    ${cmd.name} -- ${cmd.description}
+  _${cmd.name}_ -- ${cmd.description}
 
-  ### Arguments
+  #### Arguments
 
-    ${cmd.args.map(arg => `* ${arg.name} -- ${arg.description}`).join('\n')}
+  ${cmd.args.map(arg => `* ${arg.name} -- ${arg.description}`).join('\n')}
 
   #### Usage
 
-    \`/${cmd.name} ${cmd.args.map(arg => `[${arg.name}]`).join(' ')}\`
+  \`/${cmd.name} ${cmd.args.map(arg => `[${arg.name}]`).join(' ')}\`
   `;
 };
 const handler = ({ args, commentId }) => __awaiter(void 0, void 0, void 0, function* () {
