@@ -13,7 +13,7 @@ export const command: Command = {
   ]
 }
 
-const getUsageTextForCommand = (cmd: Command) => {
+const getUsageTextForCommand = (cmd: Command): string => {
   return `
   #### Name
 
