@@ -30,12 +30,12 @@ export const handler: CommandHandler = async (
     throw new Error(`The target environment "${args[0]}" is not configured.`)
   }
 
-  const ref = github.context.payload.pull_request?.branch
+  const ref = github.context.payload.pull_request?.head.ref
 
   const deployment = await createDeployment(
     environment.name,
-    github.context.ref,
-    ''
+    ref,
+    `Triggered in PR #${github.context.payload.pull_request?.number}`
   )
 
   // @ts-expect-error FIXME: figure out why `id` is not on data type
@@ -54,6 +54,6 @@ export const handler: CommandHandler = async (
 
   await updateComment(
     commentId,
-    `:clock1 Deployment of \`${github.context.ref}\` to \`${environment.name}\` has been queued...`
+    `:clock1 Deployment of \`${ref}\` to \`${environment.name}\` has been queued...`
   )
 }
