@@ -21,7 +21,7 @@ const getUsageTextForCommand = (cmd: Command): string => {
 
   #### Arguments
 
-  ${cmd.args.map(arg => `* ${arg.name} -- ${arg.description}`).join('\n')}
+  ${cmd.args.map(arg => `* \`${arg.name}\` -- ${arg.description}`).join('\n')}
 
   #### Usage
 
