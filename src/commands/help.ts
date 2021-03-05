@@ -1,4 +1,3 @@
-import * as core from '@actions/core'
 import {Command, CommandHandler} from '../command'
 import {updateComment} from '../github'
 import * as commands from './'
