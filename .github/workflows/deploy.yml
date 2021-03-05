@@ -21,6 +21,6 @@ jobs:
       - uses: actions/checkout@v2
       - uses: ./
         with:
-          token: ${{ github.token }}
+          token: ${{ secrets.CHATOPS_TOKEN }}
           event: deployment-success
           context: ${{ github.event.client_payload.chatops }}
