@@ -44,6 +44,21 @@ const getCommandNotFoundText = (name: string) => {
   `
 }
 
+const getGeneralUsageText = () => {
+  return `
+  Comment an issue or Pull Request with a command prefixed with a slash (i.e. \`/help\`) to run it.
+
+  Commands available:
+
+  ${Object.keys(commands).map(key => {
+    // @ts-expect-error FIXME
+    const cmd = commands[key].command
+
+    return `* \`${cmd.name}\` -- ${cmd.description}`
+  })}
+  `
+}
+
 export const handler: CommandHandler = async ({args, commentId}) => {
   if (args.length > 0) {
     // @ts-expect-error FIXME
@@ -57,5 +72,5 @@ export const handler: CommandHandler = async ({args, commentId}) => {
     await updateComment(commentId, getUsageTextForCommand(cmd))
   }
 
-  // TODO: general usage
+  await updateComment(commentId, getGeneralUsageText())
 }
