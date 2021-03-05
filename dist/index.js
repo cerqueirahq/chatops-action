@@ -78,9 +78,19 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.handler = exports.command = void 0;
-const core = __importStar(__webpack_require__(2186));
+const github = __importStar(__webpack_require__(5438));
+const github_1 = __webpack_require__(5928);
 exports.command = {
     name: 'deploy',
     description: 'Deploys the project to the specified environment',
@@ -91,9 +101,18 @@ exports.command = {
         }
     ]
 };
-const handler = () => {
-    core.debug(`Handling /deploy command`);
-};
+const handler = ({ args, commentId }, { environments, processor }) => __awaiter(void 0, void 0, void 0, function* () {
+    const environment = environments.find(env => env.id === args[0] || env.name === args[0]);
+    if (!environment) {
+        throw new Error(`The target environment "${args[0]}" is not configured.`);
+    }
+    const deployment = yield github_1.createDeployment(environment.name, github.context.ref, '');
+    const [processorOwner, processorRepository] = processor.split('/');
+    yield github_1.dispatchRepositoryEvent(processorOwner, processorRepository, 'chatops-deploy');
+    // @ts-expect-error FIXME: figure out why `id` is not on data type
+    yield github_1.setDeploymentState(deployment.data.id, 'queued', '', environment.url);
+    yield github_1.updateComment(commentId, `:clock1 Deployment of \`${github.context.ref}\` to \`${environment.name}\` has been queued...`);
+});
 exports.handler = handler;
 
 
@@ -154,20 +173,51 @@ const getUsageTextForCommand = (cmd) => {
 
   #### Arguments
 
-  ${cmd.args.map(arg => `* ${arg.name} -- ${arg.description}`).join('\n')}
+  ${cmd.args.map(arg => `* \`${arg.name}\` -- ${arg.description}`).join('\n')}
 
   #### Usage
 
   \`/${cmd.name} ${cmd.args.map(arg => `[${arg.name}]`).join(' ')}\`
   `;
 };
+const getCommandNotFoundText = (name) => {
+    return `
+  The command \`${name}\` doesn't exist. Here's a list of commands available:
+  
+  ${Object.keys(commands).map(key => {
+        // @ts-expect-error FIXME
+        const cmd = commands[key].command;
+        return `* \`${cmd.name}\` -- ${cmd.description}`;
+    })}
+
+  Comment \`/help [command]\` to get help for a particular command or \`/help\` for general usage.
+  `;
+};
+const getGeneralUsageText = () => {
+    return `
+  Comment an issue or Pull Request with a command prefixed with a slash (i.e. \`/help\`) to run it.
+
+  Commands available:
+
+  ${Object.keys(commands).map(key => {
+        // @ts-expect-error FIXME
+        const cmd = commands[key].command;
+        return `* \`${cmd.name}\` -- ${cmd.description}`;
+    })}
+  `;
+};
 const handler = ({ args, commentId }) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     if (args.length > 0) {
         // @ts-expect-error FIXME
-        const cmd = commands[args[0]].command;
+        const cmd = (_a = commands[args[0]]) === null || _a === void 0 ? void 0 : _a.command;
+        if (!cmd) {
+            yield github_1.updateComment(commentId, getCommandNotFoundText(args[0]));
+            return;
+        }
         yield github_1.updateComment(commentId, getUsageTextForCommand(cmd));
     }
-    // TODO: general usage
+    yield github_1.updateComment(commentId, getGeneralUsageText());
 });
 exports.handler = handler;
 
@@ -453,7 +503,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.updateComment = void 0;
+exports.setDeploymentState = exports.createDeployment = exports.dispatchRepositoryEvent = exports.updateComment = void 0;
 const core = __importStar(__webpack_require__(2186));
 const github = __importStar(__webpack_require__(5438));
 const core_1 = __webpack_require__(6762);
@@ -462,7 +512,7 @@ const octokit = new core_1.Octokit({
 });
 const updateComment = (commentId, body) => {
     const { owner, repo } = github.context.repo;
-    return octokit.request(`PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}`, {
+    return octokit.request('PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}', {
         owner,
         repo,
         body,
@@ -470,6 +520,37 @@ const updateComment = (commentId, body) => {
     });
 };
 exports.updateComment = updateComment;
+const dispatchRepositoryEvent = (owner, repo, event) => {
+    return octokit.request('POST /repos/{owner}/{repo}/dispatches', {
+        owner,
+        repo,
+        event_type: event
+    });
+};
+exports.dispatchRepositoryEvent = dispatchRepositoryEvent;
+const createDeployment = (environment, ref, description) => {
+    const { owner, repo } = github.context.repo;
+    return octokit.request('POST /repos/{owner}/{repo}/deployments', {
+        owner,
+        repo,
+        ref,
+        environment,
+        description
+    });
+};
+exports.createDeployment = createDeployment;
+const setDeploymentState = (deploymentId, state, targetURL, environmentURL) => {
+    const { owner, repo } = github.context.repo;
+    return octokit.request('POST /repos/{owner}/{repo}/deployments/{deployment_id}/statuses', {
+        owner,
+        repo,
+        state,
+        target_url: targetURL,
+        environment_url: environmentURL,
+        deployment_id: deploymentId
+    });
+};
+exports.setDeploymentState = setDeploymentState;
 
 
 /***/ }),
@@ -513,17 +594,18 @@ const github = __importStar(__webpack_require__(5438));
 const command_1 = __webpack_require__(524);
 const config_1 = __webpack_require__(88);
 const event_1 = __webpack_require__(4979);
+const github_1 = __webpack_require__(5928);
 function run() {
     var _a, _b, _c;
     return __awaiter(this, void 0, void 0, function* () {
+        const config = config_1.getConfigFromInputs();
+        const commentId = (_b = (_a = github.context) === null || _a === void 0 ? void 0 : _a.payload.comment) === null || _b === void 0 ? void 0 : _b.id;
+        core.debug(`Using configuration: ${JSON.stringify(config, null, 2)}`);
         try {
-            const config = config_1.getConfigFromInputs();
-            core.debug(`Using configuration: ${JSON.stringify(config, null, 2)}`);
             if (config.event) {
                 event_1.handleEvent(config);
                 return;
             }
-            const commentId = (_b = (_a = github.context) === null || _a === void 0 ? void 0 : _a.payload.comment) === null || _b === void 0 ? void 0 : _b.id;
             const commentBody = (_c = github.context.payload.comment) === null || _c === void 0 ? void 0 : _c.body;
             core.debug(`Comment ${commentId}: ${commentBody}`);
             const commandContext = command_1.getCommandContextFromString(commentId, commentBody);
@@ -535,6 +617,9 @@ function run() {
             core.debug('Hello, ChatOps!');
         }
         catch (error) {
+            if (commentId) {
+                yield github_1.updateComment(commentId, error.message);
+            }
             core.setFailed(error.message);
         }
     });

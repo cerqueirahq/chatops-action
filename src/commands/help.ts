@@ -29,7 +29,7 @@ const getUsageTextForCommand = (cmd: Command): string => {
   `
 }
 
-const getCommandNotFoundText = (name: string) => {
+const getCommandNotFoundText = (name: string): string => {
   return `
   The command \`${name}\` doesn't exist. Here's a list of commands available:
   
@@ -44,7 +44,7 @@ const getCommandNotFoundText = (name: string) => {
   `
 }
 
-const getGeneralUsageText = () => {
+const getGeneralUsageText = (): string => {
   return `
   Comment an issue or Pull Request with a command prefixed with a slash (i.e. \`/help\`) to run it.
 
