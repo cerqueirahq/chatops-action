@@ -16,6 +16,7 @@ export interface CommandArg {
 export interface CommandContext {
   name: string
   args: string[]
+  commentId: number
 }
 
 export interface CommandHandler {
@@ -23,6 +24,7 @@ export interface CommandHandler {
 }
 
 export const getCommandContextFromString = (
+  commentId: number,
   str: string
 ): CommandContext | undefined => {
   const firstLine = str.split(/\r?\n/)[0].trim()
@@ -36,10 +38,10 @@ export const getCommandContextFromString = (
   const [command, ...args] = firstLine.split(' ')
 
   if (args[0] === 'help') {
-    return {name: 'help', args: [command.replace('/', '')]}
+    return {name: 'help', args: [command.replace('/', '')], commentId}
   }
 
-  return {name: command.replace('/', ''), args}
+  return {name: command.replace('/', ''), args, commentId}
 }
 
 export const handleCommand: CommandHandler = (context, config) => {

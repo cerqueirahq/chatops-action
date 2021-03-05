@@ -21,7 +21,7 @@ async function run(): Promise<void> {
 
     core.debug(`Comment ${commentId}: ${commentBody}`)
 
-    const commandContext = getCommandContextFromString(commentBody)
+    const commandContext = getCommandContextFromString(commentId, commentBody)
 
     if (!commandContext) {
       core.debug('Neither a command or an event was detected... Skipping')
