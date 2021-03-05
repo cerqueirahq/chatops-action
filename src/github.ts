@@ -39,7 +39,7 @@ export const dispatchRepositoryEvent = (
   return octokit.request('POST /repos/{owner}/{repo}/dispatches', {
     owner,
     repo,
-    client_payload: payload,
+    client_payload: {chatops: payload},
     event_type: event
   })
 }

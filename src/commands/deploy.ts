@@ -30,6 +30,8 @@ export const handler: CommandHandler = async (
     throw new Error(`The target environment "${args[0]}" is not configured.`)
   }
 
+  const ref = github.context.payload.pull_request?.branch
+
   const deployment = await createDeployment(
     environment.name,
     github.context.ref,
