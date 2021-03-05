@@ -1,6 +1,7 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import {Octokit} from '@octokit/core'
+import {Context} from './context'
 
 export type GitHubDeploymentState =
   | 'queued'
@@ -32,11 +33,13 @@ export const updateComment = (commentId: number, body: string) => {
 export const dispatchRepositoryEvent = (
   owner: string,
   repo: string,
-  event: string
+  event: string,
+  payload: Context
 ) => {
   return octokit.request('POST /repos/{owner}/{repo}/dispatches', {
     owner,
     repo,
+    client_payload: payload,
     event_type: event
   })
 }

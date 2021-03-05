@@ -36,16 +36,19 @@ export const handler: CommandHandler = async (
     ''
   )
 
+  // @ts-expect-error FIXME: figure out why `id` is not on data type
+  const deploymentId = deployment.data.id
+
   const [processorOwner, processorRepository] = processor.split('/')
 
   await dispatchRepositoryEvent(
     processorOwner,
     processorRepository,
-    'chatops-deploy'
+    'chatops-deploy',
+    {issueId: github.context.issue.number, commentId, deploymentId}
   )
 
-  // @ts-expect-error FIXME: figure out why `id` is not on data type
-  await setDeploymentState(deployment.data.id, 'queued', '', environment.url!)
+  await setDeploymentState(deploymentId, 'pending', '', environment.url!)
 
   await updateComment(
     commentId,
