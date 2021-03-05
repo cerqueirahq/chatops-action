@@ -1,3 +1,4 @@
+import * as core from '@actions/core'
 import * as github from '@actions/github'
 import {Command, CommandHandler} from '../command'
 import {
@@ -22,6 +23,8 @@ export const handler: CommandHandler = async (
   {args, commentId},
   {environments, processor}
 ) => {
+  core.debug(`GH Context: ${JSON.stringify(github.context, null, 2)}`)
+
   const environment = environments.find(
     env => env.id === args[0] || env.name === args[0]
   )
