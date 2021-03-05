@@ -31,7 +31,7 @@ const getUsageTextForCommand = (cmd: Command): string => {
 
 export const handleHelpCommand: CommandHandler = async ({args, commentId}) => {
   if (args.length > 0) {
-    // @ts-expect-error
+    // @ts-expect-error FIXME
     const cmd = commands[args[0]].command
 
     await updateComment(commentId, getUsageTextForCommand(cmd))
