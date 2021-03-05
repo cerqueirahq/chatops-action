@@ -16,6 +16,7 @@ export interface CommandArg {
 export interface CommandContext {
   name: string
   args: string[]
+  commentId: number
 }
 
 export interface CommandHandler {
@@ -23,12 +24,13 @@ export interface CommandHandler {
 }
 
 export const getCommandContextFromString = (
+  commentId: number,
   str: string
 ): CommandContext | undefined => {
   const firstLine = str.split(/\r?\n/)[0].trim()
 
   if (firstLine.length < 2 || firstLine.charAt(0) != '/') {
-    console.debug('The first line of the comment is not a valid slash command.')
+    core.debug('The first line of the comment is not a valid slash command.')
 
     return
   }
@@ -36,18 +38,20 @@ export const getCommandContextFromString = (
   const [command, ...args] = firstLine.split(' ')
 
   if (args[0] === 'help') {
-    return {name: 'help', args: [command.replace('/', '')]}
+    return {name: 'help', args: [command.replace('/', '')], commentId}
   }
 
-  return {name: command.replace('/', ''), args}
+  return {name: command.replace('/', ''), args, commentId}
 }
 
 export const handleCommand: CommandHandler = (context, config) => {
-  const commandHandler = `handle${context.name.replace(/\b\w/g, l =>
-    l.toUpperCase()
-  )}Command`
+  core.debug(
+    `Handling command ${context.name} with arguments: ${JSON.stringify(
+      context.args
+    )}`
+  )
 
   // FIXME: avoid having type errors
   // @ts-expect-error
-  commands[commandHandler](context, config)
+  commands[context.name].handler(context, config)
 }

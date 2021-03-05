@@ -2,7 +2,7 @@ require('./sourcemap-register.js');module.exports =
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 88:
+/***/ 524:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -27,73 +27,34 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getConfigFromInputs = void 0;
-const environment_1 = __webpack_require__(309);
-const core = __importStar(__webpack_require__(186));
-const github = __importStar(__webpack_require__(438));
-const getConfigFromInputs = () => {
-    const config = {
-        token: core.getInput('token', { required: true }),
-        project: core.getInput('project', { required: false }),
-        processor: core.getInput('processor', { required: false }),
-        environments: JSON.parse(core.getInput('environments', { required: false }) || '[]')
-    };
-    if (!config.project) {
-        config.project = github.context.repo.repo;
-        core.info(`Config.project not set, using "${config.project}"`);
+exports.handleCommand = exports.getCommandContextFromString = void 0;
+const core = __importStar(__webpack_require__(2186));
+const commands = __importStar(__webpack_require__(8976));
+const getCommandContextFromString = (commentId, str) => {
+    const firstLine = str.split(/\r?\n/)[0].trim();
+    if (firstLine.length < 2 || firstLine.charAt(0) != '/') {
+        core.debug('The first line of the comment is not a valid slash command.');
+        return;
     }
-    if (!config.processor) {
-        config.processor = github.context.repo.repo;
-        core.info(`Config.processor not set, using "${config.processor}"`);
+    const [command, ...args] = firstLine.split(' ');
+    if (args[0] === 'help') {
+        return { name: 'help', args: [command.replace('/', '')], commentId };
     }
-    if (!config.environments || config.environments.length === 0) {
-        config.environments = environment_1.getDefaultEnvironments();
-        core.info(`Config.environments not set, using "${config.environments
-            .map(env => env.name)
-            .join(', ')}"`);
-    }
-    return config;
+    return { name: command.replace('/', ''), args, commentId };
 };
-exports.getConfigFromInputs = getConfigFromInputs;
+exports.getCommandContextFromString = getCommandContextFromString;
+const handleCommand = (context, config) => {
+    core.debug(`Handling command ${context.name} with arguments: ${JSON.stringify(context.args)}`);
+    // FIXME: avoid having type errors
+    // @ts-expect-error
+    commands[context.name].handler(context, config);
+};
+exports.handleCommand = handleCommand;
 
 
 /***/ }),
 
-/***/ 309:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getDefaultEnvironments = void 0;
-const getDefaultEnvironments = () => [
-    {
-        id: 'prd',
-        name: 'production',
-        description: 'The live, production environment'
-    },
-    {
-        id: 'stg',
-        name: 'staging',
-        description: 'The staging environment'
-    },
-    {
-        id: 'tst',
-        name: 'test',
-        description: 'The testing environment'
-    },
-    {
-        id: 'dev',
-        name: 'development',
-        description: 'The development environment'
-    }
-];
-exports.getDefaultEnvironments = getDefaultEnvironments;
-
-
-/***/ }),
-
-/***/ 109:
+/***/ 8069:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -127,16 +88,542 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const core = __importStar(__webpack_require__(186));
+exports.handler = exports.command = void 0;
+const github = __importStar(__webpack_require__(5438));
+const github_1 = __webpack_require__(5928);
+exports.command = {
+    name: 'deploy',
+    description: 'Deploys the project to the specified environment',
+    args: [
+        {
+            name: 'env',
+            description: 'The environment to deploy the project to'
+        }
+    ]
+};
+const handler = ({ args, commentId }, { environments, processor }) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
+    const environment = environments.find(env => env.id === args[0] || env.name === args[0]);
+    if (!environment) {
+        throw new Error(`The target environment "${args[0]}" is not configured.`);
+    }
+    const ref = (_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.head.ref;
+    const deployment = yield github_1.createDeployment(environment.name, ref, `Triggered in PR #${(_b = github.context.payload.pull_request) === null || _b === void 0 ? void 0 : _b.number}`);
+    // @ts-expect-error FIXME: figure out why `id` is not on data type
+    const deploymentId = deployment.data.id;
+    const [processorOwner, processorRepository] = processor.split('/');
+    yield github_1.dispatchRepositoryEvent(processorOwner, processorRepository, 'chatops-deploy', { issueId: github.context.issue.number, commentId, deploymentId });
+    yield github_1.setDeploymentState(deploymentId, 'pending', '', environment.url);
+    yield github_1.updateComment(commentId, `:clock1 Deployment of \`${ref}\` to \`${environment.name}\` has been queued...`);
+});
+exports.handler = handler;
+
+
+/***/ }),
+
+/***/ 8284:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.handler = exports.command = void 0;
+const github_1 = __webpack_require__(5928);
+const commands = __importStar(__webpack_require__(8976));
+exports.command = {
+    name: 'help',
+    description: 'Displays usage information and commands',
+    args: [
+        {
+            name: 'command',
+            description: 'A command to get information about'
+        }
+    ]
+};
+const getUsageTextForCommand = (cmd) => {
+    return `
+  #### Name
+
+  _${cmd.name}_ -- ${cmd.description}
+
+  #### Arguments
+
+  ${cmd.args.map(arg => `* \`${arg.name}\` -- ${arg.description}`).join('\n')}
+
+  #### Usage
+
+  \`/${cmd.name} ${cmd.args.map(arg => `[${arg.name}]`).join(' ')}\`
+  `;
+};
+const getCommandNotFoundText = (name) => {
+    return `
+  The command \`${name}\` doesn't exist. Here's a list of commands available:
+  
+  ${Object.keys(commands).map(key => {
+        // @ts-expect-error FIXME
+        const cmd = commands[key].command;
+        return `* \`${cmd.name}\` -- ${cmd.description}`;
+    })}
+
+  Comment \`/help [command]\` to get help for a particular command or \`/help\` for general usage.
+  `;
+};
+const getGeneralUsageText = () => {
+    return `
+  Comment an issue or Pull Request with a command prefixed with a slash (i.e. \`/help\`) to run it.
+
+  Commands available:
+
+  ${Object.keys(commands).map(key => {
+        // @ts-expect-error FIXME
+        const cmd = commands[key].command;
+        return `* \`${cmd.name}\` -- ${cmd.description}`;
+    })}
+  `;
+};
+const handler = ({ args, commentId }) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    if (args.length > 0) {
+        // @ts-expect-error FIXME
+        const cmd = (_a = commands[args[0]]) === null || _a === void 0 ? void 0 : _a.command;
+        if (!cmd) {
+            yield github_1.updateComment(commentId, getCommandNotFoundText(args[0]));
+            return;
+        }
+        yield github_1.updateComment(commentId, getUsageTextForCommand(cmd));
+    }
+    yield github_1.updateComment(commentId, getGeneralUsageText());
+});
+exports.handler = handler;
+
+
+/***/ }),
+
+/***/ 8976:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.help = exports.deploy = void 0;
+exports.deploy = __importStar(__webpack_require__(8069));
+exports.help = __importStar(__webpack_require__(8284));
+
+
+/***/ }),
+
+/***/ 88:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getConfigFromInputs = void 0;
+const core = __importStar(__webpack_require__(2186));
+const github = __importStar(__webpack_require__(5438));
+const environment_1 = __webpack_require__(3309);
+const event_1 = __webpack_require__(4979);
+const getConfigFromInputs = () => {
+    const config = {
+        event: event_1.getEventFromInputs(),
+        token: core.getInput('token', { required: true }),
+        project: core.getInput('project', { required: false }),
+        processor: core.getInput('processor', { required: false }),
+        environments: JSON.parse(core.getInput('environments', { required: false }) || '[]')
+    };
+    if (!config.project) {
+        config.project = github.context.repo.repo;
+        core.info(`Config.project not set, using "${config.project}"`);
+    }
+    if (!config.processor) {
+        config.processor = github.context.repo.repo;
+        core.info(`Config.processor not set, using "${config.processor}"`);
+    }
+    if (!config.environments || config.environments.length === 0) {
+        config.environments = environment_1.getDefaultEnvironments();
+        core.info(`Config.environments not set, using "${config.environments
+            .map(env => env.name)
+            .join(', ')}"`);
+    }
+    return config;
+};
+exports.getConfigFromInputs = getConfigFromInputs;
+
+
+/***/ }),
+
+/***/ 3309:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getDefaultEnvironments = void 0;
+const getDefaultEnvironments = () => [
+    {
+        id: 'prd',
+        name: 'production',
+        description: 'The live, production environment'
+    },
+    {
+        id: 'stg',
+        name: 'staging',
+        description: 'The staging environment'
+    },
+    {
+        id: 'tst',
+        name: 'test',
+        description: 'The testing environment'
+    },
+    {
+        id: 'dev',
+        name: 'development',
+        description: 'The development environment'
+    }
+];
+exports.getDefaultEnvironments = getDefaultEnvironments;
+
+
+/***/ }),
+
+/***/ 4979:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.handleDeploymentSuccess = exports.handleDeploymentQueued = exports.handleDeploymentInProgress = exports.handleDeploymentPending = exports.handleDeploymentFailure = exports.handleDeploymentError = exports.handleEvent = exports.getEventFromInputs = exports.EventName = exports.EventHandlingError = void 0;
+const core = __importStar(__webpack_require__(2186));
+class EventHandlingError extends Error {
+    constructor(event, message) {
+        super(`Error handling event ${event}: ${message}`);
+    }
+}
+exports.EventHandlingError = EventHandlingError;
+var EventName;
+(function (EventName) {
+    EventName["DeploymentError"] = "deployment-error";
+    EventName["DeploymentFailure"] = "deployment-failure";
+    EventName["DeploymentPending"] = "deployment-pending";
+    EventName["DeploymentInProgress"] = "deployment-in-progress";
+    EventName["DeploymentQueued"] = "deployment-queued";
+    EventName["DeploymentSuccess"] = "deployment-success";
+})(EventName = exports.EventName || (exports.EventName = {}));
+const getEventFromInputs = () => {
+    const name = core.getInput('event', { required: false });
+    const context = JSON.parse(core.getInput('context', { required: false }) || '{}');
+    if (!name) {
+        return;
+    }
+    if (!Object.values(EventName).includes(name)) {
+        throw new Error(`Unknown event provided ${name}`);
+    }
+    return { name, context };
+};
+exports.getEventFromInputs = getEventFromInputs;
+const handleEvent = (config) => {
+    const { event } = config;
+    if (!event) {
+        return;
+    }
+    core.debug(`Handling event "${event.name} with context: ${JSON.stringify(event.context, null, 2)}"`);
+    switch (event.name) {
+        case EventName.DeploymentError:
+            exports.handleDeploymentError(event, config);
+            break;
+        case EventName.DeploymentFailure:
+            exports.handleDeploymentFailure(event, config);
+            break;
+        case EventName.DeploymentPending:
+            exports.handleDeploymentPending(event, config);
+            break;
+        case EventName.DeploymentInProgress:
+            exports.handleDeploymentInProgress(event, config);
+            break;
+        case EventName.DeploymentQueued:
+            exports.handleDeploymentQueued(event, config);
+            break;
+        case EventName.DeploymentSuccess:
+            exports.handleDeploymentSuccess(event, config);
+            break;
+    }
+    throw new Error(`Unhandled event ${event.name}`);
+};
+exports.handleEvent = handleEvent;
+const handleDeploymentError = event => {
+    if (!event.context.deploymentId) {
+        throw new EventHandlingError(event.name, 'no deployment ID in context');
+    }
+    core.debug(`Handling ${EventName.DeploymentError}`);
+};
+exports.handleDeploymentError = handleDeploymentError;
+const handleDeploymentFailure = event => {
+    if (!event.context.deploymentId) {
+        throw new EventHandlingError(event.name, 'no deployment ID in context');
+    }
+    core.debug(`Handling ${EventName.DeploymentFailure}`);
+};
+exports.handleDeploymentFailure = handleDeploymentFailure;
+const handleDeploymentPending = event => {
+    if (!event.context.deploymentId) {
+        throw new EventHandlingError(event.name, 'no deployment ID in context');
+    }
+    core.debug(`Handling ${EventName.DeploymentPending}`);
+};
+exports.handleDeploymentPending = handleDeploymentPending;
+const handleDeploymentInProgress = event => {
+    if (!event.context.deploymentId) {
+        throw new EventHandlingError(event.name, 'no deployment ID in context');
+    }
+    core.debug(`Handling ${EventName.DeploymentInProgress}`);
+};
+exports.handleDeploymentInProgress = handleDeploymentInProgress;
+const handleDeploymentQueued = event => {
+    if (!event.context.deploymentId) {
+        throw new EventHandlingError(event.name, 'no deployment ID in context');
+    }
+    core.debug(`Handling ${EventName.DeploymentQueued}`);
+};
+exports.handleDeploymentQueued = handleDeploymentQueued;
+const handleDeploymentSuccess = event => {
+    if (!event.context.deploymentId) {
+        throw new EventHandlingError(event.name, 'no deployment ID in context');
+    }
+    core.debug(`Handling ${EventName.DeploymentSuccess}`);
+};
+exports.handleDeploymentSuccess = handleDeploymentSuccess;
+
+
+/***/ }),
+
+/***/ 5928:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.setDeploymentState = exports.createDeployment = exports.dispatchRepositoryEvent = exports.updateComment = void 0;
+const core = __importStar(__webpack_require__(2186));
+const github = __importStar(__webpack_require__(5438));
+const core_1 = __webpack_require__(6762);
+const octokit = new core_1.Octokit({
+    auth: core.getInput('token', { required: true })
+});
+const updateComment = (commentId, body) => {
+    const { owner, repo } = github.context.repo;
+    return octokit.request('PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}', {
+        owner,
+        repo,
+        body,
+        comment_id: commentId
+    });
+};
+exports.updateComment = updateComment;
+const dispatchRepositoryEvent = (owner, repo, event, payload) => {
+    return octokit.request('POST /repos/{owner}/{repo}/dispatches', {
+        owner,
+        repo,
+        client_payload: { chatops: payload },
+        event_type: event
+    });
+};
+exports.dispatchRepositoryEvent = dispatchRepositoryEvent;
+const createDeployment = (environment, ref, description) => {
+    const { owner, repo } = github.context.repo;
+    return octokit.request('POST /repos/{owner}/{repo}/deployments', {
+        owner,
+        repo,
+        ref,
+        environment,
+        description
+    });
+};
+exports.createDeployment = createDeployment;
+const setDeploymentState = (deploymentId, state, targetURL, environmentURL) => {
+    const { owner, repo } = github.context.repo;
+    return octokit.request('POST /repos/{owner}/{repo}/deployments/{deployment_id}/statuses', {
+        owner,
+        repo,
+        state,
+        target_url: targetURL,
+        environment_url: environmentURL,
+        deployment_id: deploymentId
+    });
+};
+exports.setDeploymentState = setDeploymentState;
+
+
+/***/ }),
+
+/***/ 3109:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const core = __importStar(__webpack_require__(2186));
+const github = __importStar(__webpack_require__(5438));
+const command_1 = __webpack_require__(524);
 const config_1 = __webpack_require__(88);
+const event_1 = __webpack_require__(4979);
+const github_1 = __webpack_require__(5928);
 function run() {
+    var _a, _b, _c;
     return __awaiter(this, void 0, void 0, function* () {
+        const config = config_1.getConfigFromInputs();
+        const commentId = (_b = (_a = github.context) === null || _a === void 0 ? void 0 : _a.payload.comment) === null || _b === void 0 ? void 0 : _b.id;
+        core.debug(`Using configuration: ${JSON.stringify(config, null, 2)}`);
         try {
-            const config = config_1.getConfigFromInputs();
-            core.debug(`Using configuration: ${JSON.stringify(config, null, 2)}`);
+            if (config.event) {
+                event_1.handleEvent(config);
+                return;
+            }
+            const commentBody = (_c = github.context.payload.comment) === null || _c === void 0 ? void 0 : _c.body;
+            core.debug(`Comment ${commentId}: ${commentBody}`);
+            const commandContext = command_1.getCommandContextFromString(commentId, commentBody);
+            if (!commandContext) {
+                core.debug('Neither a command or an event was detected... Skipping');
+                return;
+            }
+            command_1.handleCommand(commandContext, config);
             core.debug('Hello, ChatOps!');
         }
         catch (error) {
+            if (commentId) {
+                yield github_1.updateComment(commentId, error.message);
+            }
             core.setFailed(error.message);
         }
     });
@@ -146,7 +633,7 @@ run();
 
 /***/ }),
 
-/***/ 351:
+/***/ 7351:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -159,8 +646,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const os = __importStar(__webpack_require__(87));
-const utils_1 = __webpack_require__(278);
+const os = __importStar(__webpack_require__(2087));
+const utils_1 = __webpack_require__(5278);
 /**
  * Commands
  *
@@ -232,7 +719,7 @@ function escapeProperty(s) {
 
 /***/ }),
 
-/***/ 186:
+/***/ 2186:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -254,11 +741,11 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const command_1 = __webpack_require__(351);
+const command_1 = __webpack_require__(7351);
 const file_command_1 = __webpack_require__(717);
-const utils_1 = __webpack_require__(278);
-const os = __importStar(__webpack_require__(87));
-const path = __importStar(__webpack_require__(622));
+const utils_1 = __webpack_require__(5278);
+const os = __importStar(__webpack_require__(2087));
+const path = __importStar(__webpack_require__(5622));
 /**
  * The code to exit an action
  */
@@ -493,9 +980,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 // We use any as a valid input type
 /* eslint-disable @typescript-eslint/no-explicit-any */
-const fs = __importStar(__webpack_require__(747));
-const os = __importStar(__webpack_require__(87));
-const utils_1 = __webpack_require__(278);
+const fs = __importStar(__webpack_require__(5747));
+const os = __importStar(__webpack_require__(2087));
+const utils_1 = __webpack_require__(5278);
 function issueCommand(command, message) {
     const filePath = process.env[`GITHUB_${command}`];
     if (!filePath) {
@@ -513,7 +1000,7 @@ exports.issueCommand = issueCommand;
 
 /***/ }),
 
-/***/ 278:
+/***/ 5278:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -539,15 +1026,15 @@ exports.toCommandValue = toCommandValue;
 
 /***/ }),
 
-/***/ 53:
+/***/ 4087:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Context = void 0;
-const fs_1 = __webpack_require__(747);
-const os_1 = __webpack_require__(87);
+const fs_1 = __webpack_require__(5747);
+const os_1 = __webpack_require__(2087);
 class Context {
     /**
      * Hydrate the context from the environment
@@ -596,7 +1083,7 @@ exports.Context = Context;
 
 /***/ }),
 
-/***/ 438:
+/***/ 5438:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -622,8 +1109,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getOctokit = exports.context = void 0;
-const Context = __importStar(__webpack_require__(53));
-const utils_1 = __webpack_require__(30);
+const Context = __importStar(__webpack_require__(4087));
+const utils_1 = __webpack_require__(3030);
 exports.context = new Context.Context();
 /**
  * Returns a hydrated octokit ready to use for GitHub Actions
@@ -639,7 +1126,7 @@ exports.getOctokit = getOctokit;
 
 /***/ }),
 
-/***/ 914:
+/***/ 7914:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -665,7 +1152,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getApiBaseUrl = exports.getProxyAgent = exports.getAuthString = void 0;
-const httpClient = __importStar(__webpack_require__(925));
+const httpClient = __importStar(__webpack_require__(9925));
 function getAuthString(token, options) {
     if (!token && !options.auth) {
         throw new Error('Parameter token or opts.auth is required');
@@ -689,7 +1176,7 @@ exports.getApiBaseUrl = getApiBaseUrl;
 
 /***/ }),
 
-/***/ 30:
+/***/ 3030:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -715,12 +1202,12 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getOctokitOptions = exports.GitHub = exports.context = void 0;
-const Context = __importStar(__webpack_require__(53));
-const Utils = __importStar(__webpack_require__(914));
+const Context = __importStar(__webpack_require__(4087));
+const Utils = __importStar(__webpack_require__(7914));
 // octokit + plugins
-const core_1 = __webpack_require__(762);
-const plugin_rest_endpoint_methods_1 = __webpack_require__(44);
-const plugin_paginate_rest_1 = __webpack_require__(193);
+const core_1 = __webpack_require__(6762);
+const plugin_rest_endpoint_methods_1 = __webpack_require__(3044);
+const plugin_paginate_rest_1 = __webpack_require__(4193);
 exports.context = new Context.Context();
 const baseUrl = Utils.getApiBaseUrl();
 const defaults = {
@@ -750,15 +1237,15 @@ exports.getOctokitOptions = getOctokitOptions;
 
 /***/ }),
 
-/***/ 925:
+/***/ 9925:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const http = __webpack_require__(605);
-const https = __webpack_require__(211);
-const pm = __webpack_require__(443);
+const http = __webpack_require__(8605);
+const https = __webpack_require__(7211);
+const pm = __webpack_require__(6443);
 let tunnel;
 var HttpCodes;
 (function (HttpCodes) {
@@ -1177,7 +1664,7 @@ class HttpClient {
         if (useProxy) {
             // If using proxy, need tunnel
             if (!tunnel) {
-                tunnel = __webpack_require__(294);
+                tunnel = __webpack_require__(4294);
             }
             const agentOptions = {
                 maxSockets: maxSockets,
@@ -1293,7 +1780,7 @@ exports.HttpClient = HttpClient;
 
 /***/ }),
 
-/***/ 443:
+/***/ 6443:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -1415,7 +1902,7 @@ exports.createTokenAuth = createTokenAuth;
 
 /***/ }),
 
-/***/ 762:
+/***/ 6762:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -1423,10 +1910,10 @@ exports.createTokenAuth = createTokenAuth;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 
-var universalUserAgent = __webpack_require__(429);
-var beforeAfterHook = __webpack_require__(682);
-var request = __webpack_require__(234);
-var graphql = __webpack_require__(668);
+var universalUserAgent = __webpack_require__(5030);
+var beforeAfterHook = __webpack_require__(3682);
+var request = __webpack_require__(6234);
+var graphql = __webpack_require__(8467);
 var authToken = __webpack_require__(334);
 
 function _objectWithoutPropertiesLoose(source, excluded) {
@@ -1597,7 +2084,7 @@ exports.Octokit = Octokit;
 
 /***/ }),
 
-/***/ 440:
+/***/ 9440:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -1606,7 +2093,7 @@ exports.Octokit = Octokit;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 
 var isPlainObject = __webpack_require__(558);
-var universalUserAgent = __webpack_require__(429);
+var universalUserAgent = __webpack_require__(5030);
 
 function lowercaseKeys(object) {
   if (!object) {
@@ -2041,7 +2528,7 @@ exports.isPlainObject = isPlainObject;
 
 /***/ }),
 
-/***/ 668:
+/***/ 8467:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -2049,8 +2536,8 @@ exports.isPlainObject = isPlainObject;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 
-var request = __webpack_require__(234);
-var universalUserAgent = __webpack_require__(429);
+var request = __webpack_require__(6234);
+var universalUserAgent = __webpack_require__(5030);
 
 const VERSION = "4.6.0";
 
@@ -2157,7 +2644,7 @@ exports.withCustomRequest = withCustomRequest;
 
 /***/ }),
 
-/***/ 193:
+/***/ 4193:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -2297,7 +2784,7 @@ exports.paginateRest = paginateRest;
 
 /***/ }),
 
-/***/ 44:
+/***/ 3044:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -3485,8 +3972,8 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
-var deprecation = __webpack_require__(932);
-var once = _interopDefault(__webpack_require__(223));
+var deprecation = __webpack_require__(8932);
+var once = _interopDefault(__webpack_require__(1223));
 
 const logOnce = once(deprecation => console.warn(deprecation));
 /**
@@ -3538,7 +4025,7 @@ exports.RequestError = RequestError;
 
 /***/ }),
 
-/***/ 234:
+/***/ 6234:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -3548,9 +4035,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
-var endpoint = __webpack_require__(440);
-var universalUserAgent = __webpack_require__(429);
-var isPlainObject = __webpack_require__(62);
+var endpoint = __webpack_require__(9440);
+var universalUserAgent = __webpack_require__(5030);
+var isPlainObject = __webpack_require__(9062);
 var nodeFetch = _interopDefault(__webpack_require__(467));
 var requestError = __webpack_require__(537);
 
@@ -3694,7 +4181,7 @@ exports.request = request;
 
 /***/ }),
 
-/***/ 62:
+/***/ 9062:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -3740,12 +4227,12 @@ exports.isPlainObject = isPlainObject;
 
 /***/ }),
 
-/***/ 682:
+/***/ 3682:
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-var register = __webpack_require__(670)
-var addHook = __webpack_require__(549)
-var removeHook = __webpack_require__(819)
+var register = __webpack_require__(4670)
+var addHook = __webpack_require__(5549)
+var removeHook = __webpack_require__(6819)
 
 // bind with array of arguments: https://stackoverflow.com/a/21792913
 var bind = Function.bind
@@ -3804,7 +4291,7 @@ module.exports.Collection = Hook.Collection
 
 /***/ }),
 
-/***/ 549:
+/***/ 5549:
 /***/ ((module) => {
 
 module.exports = addHook;
@@ -3857,7 +4344,7 @@ function addHook(state, kind, name, hook) {
 
 /***/ }),
 
-/***/ 670:
+/***/ 4670:
 /***/ ((module) => {
 
 module.exports = register;
@@ -3891,7 +4378,7 @@ function register(state, name, method, options) {
 
 /***/ }),
 
-/***/ 819:
+/***/ 6819:
 /***/ ((module) => {
 
 module.exports = removeHook;
@@ -3917,7 +4404,7 @@ function removeHook(state, name, method) {
 
 /***/ }),
 
-/***/ 932:
+/***/ 8932:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -3955,11 +4442,11 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
-var Stream = _interopDefault(__webpack_require__(413));
-var http = _interopDefault(__webpack_require__(605));
-var Url = _interopDefault(__webpack_require__(835));
-var https = _interopDefault(__webpack_require__(211));
-var zlib = _interopDefault(__webpack_require__(761));
+var Stream = _interopDefault(__webpack_require__(2413));
+var http = _interopDefault(__webpack_require__(8605));
+var Url = _interopDefault(__webpack_require__(8835));
+var https = _interopDefault(__webpack_require__(7211));
+var zlib = _interopDefault(__webpack_require__(8761));
 
 // Based on https://github.com/tmpvar/jsdom/blob/aa85b2abf07766ff7bf5c1f6daafb3726f2f2db5/lib/jsdom/living/blob.js
 
@@ -4110,7 +4597,7 @@ FetchError.prototype.name = 'FetchError';
 
 let convert;
 try {
-	convert = __webpack_require__(877).convert;
+	convert = __webpack_require__(2877).convert;
 } catch (e) {}
 
 const INTERNALS = Symbol('Body internals');
@@ -5602,10 +6089,10 @@ exports.FetchError = FetchError;
 
 /***/ }),
 
-/***/ 223:
+/***/ 1223:
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-var wrappy = __webpack_require__(940)
+var wrappy = __webpack_require__(2940)
 module.exports = wrappy(once)
 module.exports.strict = wrappy(onceStrict)
 
@@ -5651,27 +6138,27 @@ function onceStrict (fn) {
 
 /***/ }),
 
-/***/ 294:
+/***/ 4294:
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-module.exports = __webpack_require__(219);
+module.exports = __webpack_require__(4219);
 
 
 /***/ }),
 
-/***/ 219:
+/***/ 4219:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
 
 
-var net = __webpack_require__(631);
-var tls = __webpack_require__(16);
-var http = __webpack_require__(605);
-var https = __webpack_require__(211);
-var events = __webpack_require__(614);
-var assert = __webpack_require__(357);
-var util = __webpack_require__(669);
+var net = __webpack_require__(1631);
+var tls = __webpack_require__(4016);
+var http = __webpack_require__(8605);
+var https = __webpack_require__(7211);
+var events = __webpack_require__(8614);
+var assert = __webpack_require__(2357);
+var util = __webpack_require__(1669);
 
 
 exports.httpOverHttp = httpOverHttp;
@@ -5931,7 +6418,7 @@ exports.debug = debug; // for test
 
 /***/ }),
 
-/***/ 429:
+/***/ 5030:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -5957,7 +6444,7 @@ exports.getUserAgent = getUserAgent;
 
 /***/ }),
 
-/***/ 940:
+/***/ 2940:
 /***/ ((module) => {
 
 // Returns a wrapper function that returns a wrapped callback
@@ -5997,7 +6484,7 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
-/***/ 877:
+/***/ 2877:
 /***/ ((module) => {
 
 module.exports = eval("require")("encoding");
@@ -6005,7 +6492,7 @@ module.exports = eval("require")("encoding");
 
 /***/ }),
 
-/***/ 357:
+/***/ 2357:
 /***/ ((module) => {
 
 "use strict";
@@ -6013,7 +6500,7 @@ module.exports = require("assert");;
 
 /***/ }),
 
-/***/ 614:
+/***/ 8614:
 /***/ ((module) => {
 
 "use strict";
@@ -6021,7 +6508,7 @@ module.exports = require("events");;
 
 /***/ }),
 
-/***/ 747:
+/***/ 5747:
 /***/ ((module) => {
 
 "use strict";
@@ -6029,7 +6516,7 @@ module.exports = require("fs");;
 
 /***/ }),
 
-/***/ 605:
+/***/ 8605:
 /***/ ((module) => {
 
 "use strict";
@@ -6037,7 +6524,7 @@ module.exports = require("http");;
 
 /***/ }),
 
-/***/ 211:
+/***/ 7211:
 /***/ ((module) => {
 
 "use strict";
@@ -6045,7 +6532,7 @@ module.exports = require("https");;
 
 /***/ }),
 
-/***/ 631:
+/***/ 1631:
 /***/ ((module) => {
 
 "use strict";
@@ -6053,7 +6540,7 @@ module.exports = require("net");;
 
 /***/ }),
 
-/***/ 87:
+/***/ 2087:
 /***/ ((module) => {
 
 "use strict";
@@ -6061,7 +6548,7 @@ module.exports = require("os");;
 
 /***/ }),
 
-/***/ 622:
+/***/ 5622:
 /***/ ((module) => {
 
 "use strict";
@@ -6069,7 +6556,7 @@ module.exports = require("path");;
 
 /***/ }),
 
-/***/ 413:
+/***/ 2413:
 /***/ ((module) => {
 
 "use strict";
@@ -6077,7 +6564,7 @@ module.exports = require("stream");;
 
 /***/ }),
 
-/***/ 16:
+/***/ 4016:
 /***/ ((module) => {
 
 "use strict";
@@ -6085,7 +6572,7 @@ module.exports = require("tls");;
 
 /***/ }),
 
-/***/ 835:
+/***/ 8835:
 /***/ ((module) => {
 
 "use strict";
@@ -6093,7 +6580,7 @@ module.exports = require("url");;
 
 /***/ }),
 
-/***/ 669:
+/***/ 1669:
 /***/ ((module) => {
 
 "use strict";
@@ -6101,7 +6588,7 @@ module.exports = require("util");;
 
 /***/ }),
 
-/***/ 761:
+/***/ 8761:
 /***/ ((module) => {
 
 "use strict";
@@ -6147,7 +6634,7 @@ module.exports = require("zlib");;
 /******/ 	// module exports must be returned from runtime so entry inlining is disabled
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(109);
+/******/ 	return __webpack_require__(3109);
 /******/ })()
 ;
 //# sourceMappingURL=index.js.map
