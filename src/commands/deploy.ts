@@ -1,5 +1,16 @@
 import * as core from '@actions/core'
-import {CommandHandler} from '../command'
+import {Command, CommandHandler} from '../command'
+
+export const command: Command = {
+  name: 'deploy',
+  description: 'Deploys the project to the specified environment',
+  args: [
+    {
+      name: 'env',
+      description: 'The environment to deploy the project to'
+    }
+  ]
+}
 
 export const handleDeployCommand: CommandHandler = () => {
   core.debug(`Handling /deploy command`)

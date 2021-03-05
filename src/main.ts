@@ -16,8 +16,8 @@ async function run(): Promise<void> {
       return
     }
 
-    const commentId = github.context?.payload.comment?.id
-    const commentBody: string = github.context.payload.comment?.body
+    const commentId = github.context?.payload.comment?.id!
+    const commentBody: string = github.context.payload.comment?.body!
 
     core.debug(`Comment ${commentId}: ${commentBody}`)
 
