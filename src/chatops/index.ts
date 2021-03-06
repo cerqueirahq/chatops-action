@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import {Context} from './context'
-import {Log} from './Log'
+import {Log} from './log'
 
 export {Icon} from './log'
 

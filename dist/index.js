@@ -348,131 +348,6 @@ exports.run = run;
 
 /***/ }),
 
-/***/ 3482:
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Log = exports.Icon = void 0;
-const core = __importStar(__webpack_require__(2186));
-var Icon;
-(function (Icon) {
-    Icon["Clock"] = "\uD83D\uDD50";
-    Icon["Rocket"] = "\uD83D\uDE80";
-    Icon["ArrowRight"] = "\u27A1\uFE0F";
-    Icon["Check"] = "\u2705";
-    Icon["HourGlass"] = "\u23F3";
-    Icon["FastForward"] = "\u23E9";
-    Icon["Cry"] = "\uD83D\uDE22";
-    Icon["Error"] = "\u274C";
-    Icon["BlackCircle"] = "\u26AB";
-    Icon["Info"] = "\u2139\uFE0F";
-    Icon["Warning"] = "\u26A0\uFE0F";
-    Icon["Magnifier"] = "\uD83D\uDD0D";
-})(Icon = exports.Icon || (exports.Icon = {}));
-const defaultOptions = { shouldUpdateComment: true };
-class Log {
-    constructor(context, octokit) {
-        this._context = context;
-        this._octokit = octokit;
-    }
-    debug(message, options = Object.assign(Object.assign({}, defaultOptions), { icon: Icon.Magnifier })) {
-        if (options.shouldUpdateComment) {
-            this.updateComment(message, options);
-        }
-        core.debug(message);
-    }
-    info(message, options = Object.assign(Object.assign({}, defaultOptions), { icon: Icon.Info })) {
-        if (options.shouldUpdateComment) {
-            this.updateComment(message, options);
-        }
-        core.info(message);
-    }
-    warning(message, options = Object.assign(Object.assign({}, defaultOptions), { icon: Icon.Warning })) {
-        if (options.shouldUpdateComment) {
-            this.updateComment(message, options);
-        }
-        core.warning(message);
-    }
-    error(message, options = Object.assign(Object.assign({}, defaultOptions), { icon: Icon.Error })) {
-        if (options.shouldUpdateComment) {
-            this.updateComment(message, options);
-        }
-        core.error(message);
-    }
-    setFailed(message, options = Object.assign(Object.assign({}, defaultOptions), { icon: Icon.Error })) {
-        if (options.shouldUpdateComment) {
-            this.updateComment(message, options);
-        }
-        core.setFailed(message);
-    }
-    updateComment(message, options) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                if (!this._context.commentId || !(options === null || options === void 0 ? void 0 : options.shouldUpdateComment)) {
-                    return;
-                }
-                const reqOptions = Object.assign(Object.assign({}, this._context.repository), { comment_id: this._context.commentId });
-                const getResp = yield this._octokit.issues.getComment(reqOptions);
-                if (getResp.status !== 200) {
-                    return;
-                }
-                const body = this.appendBody(getResp.data.body || '', `${(options === null || options === void 0 ? void 0 : options.icon) ? `${options.icon} ` : ''} ${message}`);
-                const updateResp = yield this._octokit.issues.updateComment(Object.assign(Object.assign({}, reqOptions), { body }));
-                return {
-                    id: updateResp.data.id,
-                    body: updateResp.data.body
-                };
-            }
-            catch (error) {
-                this.setFailed(`Failed to update comment: ${JSON.stringify(error, null, 2)}`, { shouldUpdateComment: false });
-            }
-        });
-    }
-    trimBody(body) {
-        return body
-            .split('\n')
-            .map(l => l.trimStart())
-            .join('\n');
-    }
-    appendBody(original, body) {
-        return this.trimBody(`${original}\n${body}`);
-    }
-}
-exports.Log = Log;
-
-
-/***/ }),
-
 /***/ 8363:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
@@ -596,12 +471,12 @@ exports.setFailed = exports.warn = exports.info = exports.error = exports.debug 
 const core = __importStar(__webpack_require__(2186));
 const github = __importStar(__webpack_require__(5438));
 const context_1 = __webpack_require__(8363);
-const Log_1 = __webpack_require__(3482);
-var log_1 = __webpack_require__(8540);
-Object.defineProperty(exports, "Icon", ({ enumerable: true, get: function () { return log_1.Icon; } }));
+const log_1 = __webpack_require__(8540);
+var log_2 = __webpack_require__(8540);
+Object.defineProperty(exports, "Icon", ({ enumerable: true, get: function () { return log_2.Icon; } }));
 exports.octokit = github.getOctokit(core.getInput('token', { required: true }), { previews: ['flash', 'ant-man'] });
 exports.context = new context_1.Context(exports.octokit);
-const log = new Log_1.Log(exports.context, exports.octokit);
+const log = new log_1.Log(exports.context, exports.octokit);
 exports.debug = log.debug.bind(log);
 exports.error = log.error.bind(log);
 exports.info = log.info.bind(log);
