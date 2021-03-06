@@ -512,7 +512,8 @@ class Context {
         this.environments = this.inputFromJSON('environments', [], { required: true });
         // @ts-expect-error FIXME: prop doesn't exist on GitHub context but will on event payload
         this.deploymentId = this.payload.deploymentId;
-        this.issueNumber = this.payload.issue.number;
+        // FIXME: this should be available in payload
+        this.issueNumber = github.context.issue.number;
         this.commentId = (_a = this.payload.payload.comment) === null || _a === void 0 ? void 0 : _a.id;
         this.repository = this.payload.repo;
         this.message = core.getInput('message');
