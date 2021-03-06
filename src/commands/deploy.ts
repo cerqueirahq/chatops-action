@@ -112,10 +112,8 @@ export const deploy = actionSlasher.command('deploy', {
     })
 
     const eventPayload = {
-      chatops: {
-        deploymentId: deployment.data.id,
-        originalPayload: context.payload
-      }
+      ...context.payload,
+      deploymentId: deployment.data.id
     }
 
     await octokit.repos.createDispatchEvent({
