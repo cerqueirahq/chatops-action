@@ -668,14 +668,14 @@ exports.cancelDeployment = actionSlasher.command('cancel-deployment', {
             const deployment = yield chatops.octokit.repos.getDeployment(Object.assign(Object.assign({}, repository), { deployment_id: deploymentId }));
             yield chatops.octokit.repos.createDeploymentStatus(Object.assign(Object.assign({}, repository), { deployment_id: deploymentId, state: 'error', description: 'Deployment cancelled' }));
             chatops.info(`
-        Deployment with ID ${deploymentId} to ${deployment.data.environment} was cancelled...
+        ${chatops.Icon.BlackCircle} Deployment with ID ${deploymentId} to ${deployment.data.environment} was cancelled...
 
         If you also want do delete the deployment, use the command:
 
         \`\`\`
         /delete-deployment --id ${deploymentId}
         \`\`\`
-      `, { icon: chatops.Icon.BlackCircle, shouldUpdateComment: true });
+      `, { icon: undefined, shouldUpdateComment: true });
         });
     }
 });
@@ -835,7 +835,7 @@ exports.deploy = actionSlasher.command('deploy', {
                 return;
             }
             const deploymentOptions = Object.assign(Object.assign({}, repository), { ref: yield chatops.context.fetchRef(), environment: environment.name, environment_url: environment.url, description: `Triggered in PR #${chatops.context.issueNumber}` });
-            chatops.debug(`Ref: ${deploymentOptions.ref}`);
+            chatops.debug(`DeploymentOptions: ${deploymentOptions}`);
             let deployment = yield chatops.octokit.repos.createDeployment(deploymentOptions);
             // Status code === 202 means GitHub performed an auto-merge
             // and we have to attempt creating the deployment again

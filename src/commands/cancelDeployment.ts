@@ -34,7 +34,7 @@ export const cancelDeployment = actionSlasher.command('cancel-deployment', {
 
     chatops.info(
       `
-        Deployment with ID ${deploymentId} to ${deployment.data.environment} was cancelled...
+        ${chatops.Icon.BlackCircle} Deployment with ID ${deploymentId} to ${deployment.data.environment} was cancelled...
 
         If you also want do delete the deployment, use the command:
 
@@ -42,7 +42,7 @@ export const cancelDeployment = actionSlasher.command('cancel-deployment', {
         /delete-deployment --id ${deploymentId}
         \`\`\`
       `,
-      {icon: chatops.Icon.BlackCircle, shouldUpdateComment: true}
+      {icon: undefined, shouldUpdateComment: true}
     )
   }
 })
