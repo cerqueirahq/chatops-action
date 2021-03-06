@@ -79,11 +79,13 @@ export const listDeployments = actionSlasher.command('list-deployments', {
     const table = `
     | ID | Environment | Ref | State | Created by |
     | -- | ----------- | --- | ----- | ---------- |
-    ${deployments.map(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (deployment: any) =>
-        `| [${deployment.id}](${deployment.url}) | ${deployment.environment} | ${deployment.ref} | ${deployment.state} | @${deployment.creator?.login} |`
-    )}
+    ${deployments
+      .map(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (deployment: any) =>
+          `| [${deployment.id}](${deployment.url}) | ${deployment.environment} | ${deployment.ref.name} | ${deployment.state} | @${deployment.creator?.login} |`
+      )
+      .join('\n')}
     `
 
     chatops.info(table, {

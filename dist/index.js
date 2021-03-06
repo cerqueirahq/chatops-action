@@ -990,9 +990,11 @@ exports.listDeployments = actionSlasher.command('list-deployments', {
             const table = `
     | ID | Environment | Ref | State | Created by |
     | -- | ----------- | --- | ----- | ---------- |
-    ${deployments.map(
+    ${deployments
+                .map(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (deployment) => { var _a; return `| [${deployment.id}](${deployment.url}) | ${deployment.environment} | ${deployment.ref} | ${deployment.state} | @${(_a = deployment.creator) === null || _a === void 0 ? void 0 : _a.login} |`; })}
+            (deployment) => { var _a; return `| [${deployment.id}](${deployment.url}) | ${deployment.environment} | ${deployment.ref.name} | ${deployment.state} | @${(_a = deployment.creator) === null || _a === void 0 ? void 0 : _a.login} |`; })
+                .join('\n')}
     `;
             chatops.info(table, {
                 icon: undefined,
