@@ -94,14 +94,6 @@ export class Context {
     fallback: T,
     options?: core.InputOptions
   ): T {
-    const input = core.getInput(name, options)
-
-    core.debug(`=====> INPUT (${name}): ${input}`)
-
-    if (!input) {
-      return fallback
-    }
-
-    return JSON.parse(input) as T
+    return JSON.parse(core.getInput(name, options) || JSON.stringify(fallback))
   }
 }
