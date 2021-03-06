@@ -1,0 +1,11 @@
+{
+  "comment": {
+    "id": "791443123",
+    "body": "/cancel-deployment --id 332982055"
+  },
+  "pull_request": {
+    "head": {
+      "ref": "test/test-action"
+    }
+  }
+}

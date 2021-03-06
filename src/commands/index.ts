@@ -1,2 +1,4 @@
-export * as deploy from './deploy'
-export * as help from './help'
+export * from './cancelDeployment'
+export * from './deleteDeployment'
+export * from './deploy'
+export * from './poll'

@@ -1,62 +1,138 @@
-import * as core from '@actions/core'
-import * as github from '@actions/github'
-import {Command, CommandHandler} from '../command'
-import {
-  createDeployment,
-  dispatchRepositoryEvent,
-  setDeploymentState,
-  updateComment
-} from '../github'
+import * as utils from '../utils'
+import * as context from '../context'
+import * as actionSlasher from '../action-slasher'
+import {octokit} from '../octokit'
 
-export const command: Command = {
-  name: 'deploy',
+export const deploy = actionSlasher.command('deploy', {
   description: 'Deploys the project to the specified environment',
-  args: [
-    {
-      name: 'env',
-      description: 'The environment to deploy the project to'
+  definition(c) {
+    c.arg('env', {
+      type: String,
+      description: 'The target environment for the deployment'
+    })
+  },
+  async handler(args) {
+    if (!context.isPullRequest) {
+      throw new Error(`ChatOps doesn't support deploying from issues yet`)
     }
-  ]
-}
 
-export const handler: CommandHandler = async (
-  {args, commentId},
-  {environments, processor}
-) => {
-  core.debug(`GH Context: ${JSON.stringify(github.context, null, 2)}`)
+    let environment = context.findDefaultEnvironment()
 
-  const environment = environments.find(
-    env => env.id === args[0] || env.name === args[0]
-  )
+    // @ts-expect-error FIXME
+    if (args.env) {
+      // @ts-expect-error FIXME
+      environment = context.findEnvironment(args.env)
+    }
 
-  if (!environment) {
-    throw new Error(`The target environment "${args[0]}" is not configured.`)
+    if (!environment) {
+      // @ts-expect-error FIXME
+      throw new Error(`The target environment "${args.env}" is not configured.`)
+    }
+
+    const activeDeployment = (
+      await Promise.all(
+        (
+          await octokit.repos.listDeployments({
+            ...context.repository,
+            environment: environment.name
+          })
+        ).data.map(async deployment => {
+          const status = (
+            await octokit.repos.listDeploymentStatuses({
+              ...context.repository,
+              deployment_id: deployment.id
+            })
+          ).data[0]
+
+          return {
+            deployment,
+            status,
+            active: ['queued', 'pending', 'in_progress'].includes(status.state)
+          }
+        })
+      )
+    ).find(({active}) => active)
+
+    if (activeDeployment) {
+      const errorMessage = utils.appendBody(
+        context.commentBody,
+        `\n${utils.Icon.Error} A deployment for ${environment.name} environment is already ${activeDeployment.status.state}.
+        
+        Wait for its completion before triggering a new deployment to this environment.
+
+        If you want to cancel the active deployment, use the command:
+
+        \`\`\`
+        /cancel-deployment --id ${activeDeployment.deployment.id}
+        \`\`\`
+        `
+      )
+
+      await octokit.issues.updateComment({
+        ...context.repository,
+        comment_id: context.commentId,
+        body: errorMessage
+      })
+
+      throw new Error(errorMessage)
+    }
+
+    const deploymentOptions = {
+      ...context.repository,
+      ref: context.ref,
+      environment: environment.name,
+      environment_url: environment.url,
+      description: `Triggered in PR #${context.issueNumber}`
+    }
+
+    let deployment = await octokit.repos.createDeployment(deploymentOptions)
+
+    // Status code === 202 means GitHub performed an auto-merge
+    // and we have to attempt creating the deployment again
+    if (deployment.status === 202) {
+      deployment = await octokit.repos.createDeployment(deploymentOptions)
+    }
+
+    // When status code is something else than 201, even if it's an
+    // auto-merge again, we stop execution
+    if (deployment.status !== 201) {
+      throw new Error(
+        `Could not start a deployment... Endpoint returned ${
+          deployment.status
+        }: ${JSON.stringify(deployment.data, null, 2)}`
+      )
+    }
+
+    // Set the status of the deployment to queued as it'll be triggered
+    // by another workflow which will start in the same state
+    await octokit.repos.createDeploymentStatus({
+      ...context.repository,
+      deployment_id: deployment.data.id,
+      state: 'queued'
+    })
+
+    const eventPayload = {
+      chatops: {
+        deploymentId: deployment.data.id,
+        originalPayload: context.payload
+      }
+    }
+
+    await octokit.repos.createDispatchEvent({
+      ...context.processor,
+      event_type: 'chatops-deploy',
+      client_payload: eventPayload
+    })
+
+    if (context.commentId) {
+      await octokit.issues.updateComment({
+        ...context.repository,
+        comment_id: context.commentId,
+        body: utils.appendBody(
+          context.commentBody,
+          `\n${utils.Icon.Clock} Deployment of \`${context.ref}\` to \`${environment.name}\` has been queued (ID: ${deployment.data.id})...`
+        )
+      })
+    }
   }
-
-  const ref = github.context.payload.pull_request?.head.ref
-
-  const deployment = await createDeployment(
-    environment.name,
-    ref,
-    `Triggered in PR #${github.context.payload.pull_request?.number}`
-  )
-
-  // @ts-expect-error FIXME: figure out why `id` is not on data type
-  const deploymentId = deployment.data.id
-
-  const [processorOwner, processorRepository] = processor.split('/')
-
-  await dispatchRepositoryEvent(
-    processorOwner,
-    processorRepository,
-    'chatops-deploy',
-    {issueId: github.context.issue.number, commentId, deploymentId}
-  )
-
-  await setDeploymentState(deploymentId, 'pending', '', environment.url!)
-
-  await updateComment(
-    commentId,
-    `:clock1 Deployment of \`${ref}\` to \`${environment.name}\` has been queued...`
-  )
-}
+})
