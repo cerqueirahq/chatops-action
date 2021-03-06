@@ -11,9 +11,9 @@ inputs:
     required: false
     description: An event to be handled
 
-  context:
+  payload:
     required: false
-    description: The context of an event (only required when handling events)
+    description: The event payload (only required when handling events)
 
   project:
     required: false
