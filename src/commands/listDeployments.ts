@@ -28,30 +28,41 @@ export const listDeployments = actionSlasher.command('list-deployments', {
 
     const {repository} = chatops.context
 
-    const deployments = await Promise.all(
-      (
-        await chatops.octokit.repos.listDeployments({
-          ...repository,
-          ref,
-          environment: env,
-          per_page: 100
-        })
-      ).data.map(async deployment => {
-        const statuses = (
-          await chatops.octokit.repos.listDeploymentStatuses({
-            ...repository,
-            deployment_id: deployment.id
-          })
-        ).data
+    const envs = env
+      ? [env]
+      : chatops.context.environments.map(({name}) => name)
 
-        return {
-          deployment,
-          status: state
-            ? statuses.find(status => status.state === state)
-            : statuses[0]
-        }
-      })
-    )
+    const deployments = (
+      await Promise.all(
+        envs.map(
+          async e =>
+            await Promise.all(
+              (
+                await chatops.octokit.repos.listDeployments({
+                  ...repository,
+                  ref,
+                  environment: e,
+                  per_page: 100
+                })
+              ).data.map(async deployment => {
+                const statuses = (
+                  await chatops.octokit.repos.listDeploymentStatuses({
+                    ...repository,
+                    deployment_id: deployment.id
+                  })
+                ).data
+
+                return {
+                  deployment,
+                  status: state
+                    ? statuses.find(status => status.state === state)
+                    : statuses[0]
+                }
+              })
+            )
+        )
+      )
+    ).flat()
 
     if (deployments.length === 0) {
       chatops.info(`

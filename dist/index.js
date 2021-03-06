@@ -950,15 +950,20 @@ exports.listDeployments = actionSlasher.command('list-deployments', {
             // @ts-expect-error FIXME
             const { env, state } = args;
             const { repository } = chatops.context;
-            const deployments = yield Promise.all((yield chatops.octokit.repos.listDeployments(Object.assign(Object.assign({}, repository), { ref, environment: env, per_page: 100 }))).data.map((deployment) => __awaiter(this, void 0, void 0, function* () {
-                const statuses = (yield chatops.octokit.repos.listDeploymentStatuses(Object.assign(Object.assign({}, repository), { deployment_id: deployment.id }))).data;
-                return {
-                    deployment,
-                    status: state
-                        ? statuses.find(status => status.state === state)
-                        : statuses[0]
-                };
-            })));
+            const envs = env
+                ? [env]
+                : chatops.context.environments.map(({ name }) => name);
+            const deployments = (yield Promise.all(envs.map((e) => __awaiter(this, void 0, void 0, function* () {
+                return yield Promise.all((yield chatops.octokit.repos.listDeployments(Object.assign(Object.assign({}, repository), { ref, environment: e, per_page: 100 }))).data.map((deployment) => __awaiter(this, void 0, void 0, function* () {
+                    const statuses = (yield chatops.octokit.repos.listDeploymentStatuses(Object.assign(Object.assign({}, repository), { deployment_id: deployment.id }))).data;
+                    return {
+                        deployment,
+                        status: state
+                            ? statuses.find(status => status.state === state)
+                            : statuses[0]
+                    };
+                })));
+            })))).flat();
             if (deployments.length === 0) {
                 chatops.info(`
       _No deployments found for ${env ? `environment ${env}` : 'any environment'}, reference ${ref} and ${state ? `state ${state}` : 'any state'}._
