@@ -15,6 +15,15 @@ export interface Repository {
   repo: string
 }
 
+export interface Payload {
+  project: string
+  processor: Repository
+  repository: Repository
+  issueNumber: number
+  commentId?: number
+  deploymentId?: number
+}
+
 export class Context {
   issueNumber: number
   commentId?: number
@@ -24,31 +33,33 @@ export class Context {
   message: string
   isPullRequest: boolean
   environments: Environment[]
-  payload: typeof github.context
+  payload: Payload
 
   private _octokit: InstanceType<typeof GitHub>
 
   constructor(octokit: InstanceType<typeof GitHub>) {
-    this.payload = this.inputFromJSON('payload', github.context)
     this.environments = this.inputFromJSON('environments', [], {required: true})
 
-    // @ts-expect-error FIXME: prop doesn't exist on GitHub context but will on event payload
-    this.deploymentId = this.payload.deploymentId
+    const {repo} = github.context
 
-    // FIXME: this should be available in payload
-    this.issueNumber = github.context.issue.number
-    this.commentId = this.payload.payload.comment?.id
-    this.repository = github.context.repo
+    this.payload = this.inputFromJSON('payload', {
+      issueNumber: github.context.issue.number,
+      commentId: github.context.payload.comment?.id,
+      repository: repo,
+      processor: this.processor,
+      project: core.getInput('project') || `${repo.owner}/${repo.repo}`
+    })
+
+    this.project = this.payload.project
+    this.repository = this.payload.repository
+    this.deploymentId = this.payload.deploymentId
+    this.issueNumber = this.payload.issueNumber
+    this.commentId = this.payload.commentId
+
     this.message = core.getInput('message')
 
     // @ts-expect-error FIXME
     this.isPullRequest = !!github.context.payload.issue.pull_request
-
-    core.debug(`====> ${JSON.stringify(github.context, null, 2)}`)
-
-    this.project =
-      core.getInput('project') ||
-      `${this.repository.owner}/${this.repository.repo}`
 
     this._octokit = octokit
   }
@@ -59,7 +70,7 @@ export class Context {
       .split('/')
 
     if (!processorOwner || !processorRepo) {
-      return this.repository
+      return github.context.repo
     }
 
     return {owner: processorOwner, repo: processorRepo}
