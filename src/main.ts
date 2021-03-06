@@ -15,7 +15,7 @@ const run = async (): Promise<void> => {
   )
 
   try {
-    actionSlasher.run({commands, events})
+    await actionSlasher.run({commands, events})
   } catch (error) {
     core.setFailed(error.message || error)
   }

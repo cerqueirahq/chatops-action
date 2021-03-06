@@ -42,9 +42,9 @@ export class Context {
     this.message = core.getInput('message')
 
     // @ts-expect-error FIXME
-    this.isPullRequest = github.context.issue.pull_request
+    this.isPullRequest = !!github.context.payload.issue.pull_request
 
-    core.debug(`====> ${JSON.stringify(github.context)}`)
+    core.debug(`====> ${JSON.stringify(github.context, null, 2)}`)
 
     this.project =
       core.getInput('project') ||

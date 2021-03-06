@@ -518,8 +518,8 @@ class Context {
         this.repository = this.payload.repo;
         this.message = core.getInput('message');
         // @ts-expect-error FIXME
-        this.isPullRequest = github.context.issue.pull_request;
-        core.debug(`====> ${JSON.stringify(github.context)}`);
+        this.isPullRequest = !!github.context.payload.issue.pull_request;
+        core.debug(`====> ${JSON.stringify(github.context, null, 2)}`);
         this.project =
             core.getInput('project') ||
                 `${this.repository.owner}/${this.repository.repo}`;
@@ -1483,7 +1483,7 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
     core.debug(`Deployment ID: ${chatops.context.deploymentId}`);
     core.debug(`Issue Number: ${chatops.context.issueNumber} (pr? ${chatops.context.isPullRequest})`);
     try {
-        actionSlasher.run({ commands, events });
+        yield actionSlasher.run({ commands, events });
     }
     catch (error) {
         core.setFailed(error.message || error);
