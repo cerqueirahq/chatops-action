@@ -884,7 +884,93 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 __exportStar(__webpack_require__(9142), exports);
 __exportStar(__webpack_require__(6878), exports);
 __exportStar(__webpack_require__(8069), exports);
+__exportStar(__webpack_require__(8470), exports);
 __exportStar(__webpack_require__(4783), exports);
+
+
+/***/ }),
+
+/***/ 8470:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.listDeployments = void 0;
+const actionSlasher = __importStar(__webpack_require__(1558));
+const chatops = __importStar(__webpack_require__(9032));
+exports.listDeployments = actionSlasher.command('list-deployments', {
+    description: 'Lists all deployments for a specific reference',
+    definition(c) {
+        c.arg('ref', {
+            type: String,
+            description: 'The reference of the deployment'
+        });
+        c.arg('env', {
+            type: String,
+            description: 'Only list deployments for this environment'
+        });
+        c.arg('state', {
+            type: String,
+            description: 'Only list deployments in this state'
+        });
+    },
+    handler(args) {
+        return __awaiter(this, void 0, void 0, function* () {
+            // @ts-expect-error FIXME
+            const ref = args.ref || (yield chatops.context.fetchRef());
+            // @ts-expect-error FIXME
+            const { env, state } = args;
+            const { repository } = chatops.context;
+            const deployments = yield Promise.all((yield chatops.octokit.repos.listDeployments(Object.assign(Object.assign({}, repository), { ref, environment: env }))).data.map((deployment) => __awaiter(this, void 0, void 0, function* () {
+                const statuses = (yield chatops.octokit.repos.listDeploymentStatuses(Object.assign(Object.assign({}, repository), { deployment_id: deployment.id }))).data;
+                return {
+                    deployment,
+                    status: state
+                        ? statuses[0]
+                        : statuses.find(status => status.state === state)
+                };
+            })));
+            const table = `
+    | ID | Environment | State | URL |
+    | -- | ----------- | ----- | --- |
+    ${deployments.map(({ deployment, status }) => `| ${deployment.id} | ${deployment.environment} | ${status === null || status === void 0 ? void 0 : status.state} | ${deployment.url} |`)}
+    `;
+            chatops.info(table, {
+                icon: undefined,
+                shouldUpdateComment: true
+            });
+        });
+    }
+});
 
 
 /***/ }),
