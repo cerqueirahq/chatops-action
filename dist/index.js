@@ -388,21 +388,23 @@ const github = __importStar(__webpack_require__(5438));
 class Context {
     constructor(octokit) {
         var _a;
-        this.payload = this.inputFromJSON('payload', github.context);
         this.environments = this.inputFromJSON('environments', [], { required: true });
-        // @ts-expect-error FIXME: prop doesn't exist on GitHub context but will on event payload
+        const { repo } = github.context;
+        this.payload = this.inputFromJSON('payload', {
+            issueNumber: github.context.issue.number,
+            commentId: (_a = github.context.payload.comment) === null || _a === void 0 ? void 0 : _a.id,
+            repository: repo,
+            processor: this.processor,
+            project: core.getInput('project') || `${repo.owner}/${repo.repo}`
+        });
+        this.project = this.payload.project;
+        this.repository = this.payload.repository;
         this.deploymentId = this.payload.deploymentId;
-        // FIXME: this should be available in payload
-        this.issueNumber = github.context.issue.number;
-        this.commentId = (_a = this.payload.payload.comment) === null || _a === void 0 ? void 0 : _a.id;
-        this.repository = github.context.repo;
+        this.issueNumber = this.payload.issueNumber;
+        this.commentId = this.payload.commentId;
         this.message = core.getInput('message');
         // @ts-expect-error FIXME
         this.isPullRequest = !!github.context.payload.issue.pull_request;
-        core.debug(`====> ${JSON.stringify(github.context, null, 2)}`);
-        this.project =
-            core.getInput('project') ||
-                `${this.repository.owner}/${this.repository.repo}`;
         this._octokit = octokit;
     }
     get processor() {
@@ -410,7 +412,7 @@ class Context {
             .getInput('processor')
             .split('/');
         if (!processorOwner || !processorRepo) {
-            return this.repository;
+            return github.context.repo;
         }
         return { owner: processorOwner, repo: processorRepo };
     }
@@ -852,7 +854,7 @@ exports.deploy = actionSlasher.command('deploy', {
             // Set the status of the deployment to queued as it'll be triggered
             // by another workflow which will start in the same state
             yield chatops.octokit.repos.createDeploymentStatus(Object.assign(Object.assign({}, repository), { deployment_id: deployment.data.id, state: 'queued' }));
-            yield chatops.octokit.repos.createDispatchEvent(Object.assign(Object.assign({}, chatops.context.processor), { event_type: 'chatops-deploy', client_payload: Object.assign(Object.assign({}, chatops.context.payload), { deploymentId: deployment.data.id }) }));
+            yield chatops.octokit.repos.createDispatchEvent(Object.assign(Object.assign({}, chatops.context.processor), { event_type: 'chatops-deploy', client_payload: chatops.context.payload }));
             chatops.info(`\n${chatops.Icon.Clock} Deployment of \`${deploymentOptions.ref}\` to \`${environment.name}\` has been queued (ID: ${deployment.data.id})...`, { icon: undefined, shouldUpdateComment: true });
         });
     }
