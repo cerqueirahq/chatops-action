@@ -96,6 +96,8 @@ export class Context {
   ): T {
     const input = core.getInput(name, options)
 
+    core.debug(`=====> INPUT (${name}): ${input}`)
+
     if (!input) {
       return fallback
     }

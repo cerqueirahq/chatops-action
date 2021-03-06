@@ -552,6 +552,7 @@ class Context {
     }
     inputFromJSON(name, fallback, options) {
         const input = core.getInput(name, options);
+        core.debug(`=====> INPUT (${name}): ${input}`);
         if (!input) {
             return fallback;
         }
