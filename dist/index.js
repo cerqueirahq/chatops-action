@@ -298,7 +298,13 @@ function run({ commands, events }) {
             helpCommand.handler({ cmd: cmd.name });
             return;
         }
-        cmd.handler(args);
+        try {
+            cmd.handler(args);
+        }
+        catch (err) {
+            core.error(`Error caught in ActionSlasher: ${err.message}`);
+            core.setFailed(err.message);
+        }
         return;
     }
     // If no command has matched, display help information
@@ -693,7 +699,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var _a, _b, _c, _d;
+var _a, _b, _c, _d, _e;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.log = exports.deploymentId = exports.processor = exports.repository = exports.ref = exports.commentBody = exports.commentId = exports.issueNumber = exports.isPullRequest = exports.payload = exports.findDefaultEnvironment = exports.findEnvironment = exports.environments = void 0;
 const core = __importStar(__webpack_require__(2186));
@@ -736,11 +742,11 @@ const findDefaultEnvironment = () => exports.environments.find(env => env.defaul
 exports.findDefaultEnvironment = findDefaultEnvironment;
 exports.payload = eventPayload
     ? Object.assign(Object.assign({}, github.context.payload), eventPayload) : github.context.payload;
-exports.isPullRequest = !!exports.payload.pull_request;
-exports.issueNumber = (_a = exports.payload.issue) === null || _a === void 0 ? void 0 : _a.number;
-exports.commentId = (_b = exports.payload.comment) === null || _b === void 0 ? void 0 : _b.id;
-exports.commentBody = (_c = exports.payload.comment) === null || _c === void 0 ? void 0 : _c.body;
-exports.ref = (_d = exports.payload.pull_request) === null || _d === void 0 ? void 0 : _d.head.ref;
+exports.isPullRequest = !!((_a = github.context.payload.issue) === null || _a === void 0 ? void 0 : _a.pull_request);
+exports.issueNumber = (_b = exports.payload.issue) === null || _b === void 0 ? void 0 : _b.number;
+exports.commentId = (_c = exports.payload.comment) === null || _c === void 0 ? void 0 : _c.id;
+exports.commentBody = (_d = exports.payload.comment) === null || _d === void 0 ? void 0 : _d.body;
+exports.ref = (_e = exports.payload.pull_request) === null || _e === void 0 ? void 0 : _e.head.ref;
 exports.repository = exports.payload.repo || github.context.repo;
 exports.processor = { owner: processorOwner, repo: processorRepo };
 exports.deploymentId = exports.payload.deploymentId;
