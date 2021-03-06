@@ -38,7 +38,7 @@ export class Context {
     // FIXME: this should be available in payload
     this.issueNumber = github.context.issue.number
     this.commentId = this.payload.payload.comment?.id
-    this.repository = this.payload.repo
+    this.repository = github.context.repo
     this.message = core.getInput('message')
 
     // @ts-expect-error FIXME

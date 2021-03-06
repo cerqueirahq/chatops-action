@@ -520,7 +520,7 @@ class Context {
         // FIXME: this should be available in payload
         this.issueNumber = github.context.issue.number;
         this.commentId = (_a = this.payload.payload.comment) === null || _a === void 0 ? void 0 : _a.id;
-        this.repository = this.payload.repo;
+        this.repository = github.context.repo;
         this.message = core.getInput('message');
         // @ts-expect-error FIXME
         this.isPullRequest = !!github.context.payload.issue.pull_request;
@@ -1488,7 +1488,8 @@ const chatops = __importStar(__webpack_require__(9032));
 const events = __importStar(__webpack_require__(2249));
 const run = () => __awaiter(void 0, void 0, void 0, function* () {
     core.debug(`Payload: ${JSON.stringify(chatops.context.payload, null, 2)}`);
-    core.debug(`Project : ${chatops.context.project}`);
+    core.debug(`Project: ${chatops.context.project}`);
+    core.debug(`Repository: ${chatops.context.repository}`);
     core.debug(`Comment ID: ${chatops.context.commentId}`);
     core.debug(`Deployment ID: ${chatops.context.deploymentId}`);
     core.debug(`Issue Number: ${chatops.context.issueNumber} (pr? ${chatops.context.isPullRequest})`);
