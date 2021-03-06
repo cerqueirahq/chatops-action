@@ -950,7 +950,7 @@ exports.listDeployments = actionSlasher.command('list-deployments', {
             // @ts-expect-error FIXME
             const { env, state } = args;
             const { repository } = chatops.context;
-            const deployments = yield Promise.all((yield chatops.octokit.repos.listDeployments(Object.assign(Object.assign({}, repository), { ref, environment: env }))).data.map((deployment) => __awaiter(this, void 0, void 0, function* () {
+            const deployments = yield Promise.all((yield chatops.octokit.repos.listDeployments(Object.assign(Object.assign({}, repository), { ref, environment: env, per_page: 100 }))).data.map((deployment) => __awaiter(this, void 0, void 0, function* () {
                 const statuses = (yield chatops.octokit.repos.listDeploymentStatuses(Object.assign(Object.assign({}, repository), { deployment_id: deployment.id }))).data;
                 return {
                     deployment,

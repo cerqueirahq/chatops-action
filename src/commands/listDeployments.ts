@@ -33,7 +33,8 @@ export const listDeployments = actionSlasher.command('list-deployments', {
         await chatops.octokit.repos.listDeployments({
           ...repository,
           ref,
-          environment: env
+          environment: env,
+          per_page: 100
         })
       ).data.map(async deployment => {
         const statuses = (
