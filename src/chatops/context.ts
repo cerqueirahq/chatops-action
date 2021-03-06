@@ -40,7 +40,11 @@ export class Context {
     this.commentId = this.payload.payload.comment?.id
     this.repository = this.payload.repo
     this.message = core.getInput('message')
-    this.isPullRequest = 'pull_request' in this.payload.issue
+
+    // FIXME
+    this.isPullRequest = true
+
+    core.debug(`====> ${github.context}`)
 
     this.project =
       core.getInput('project') ||
