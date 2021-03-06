@@ -122,7 +122,10 @@ export const deploy = actionSlasher.command('deploy', {
     await chatops.octokit.repos.createDispatchEvent({
       ...chatops.context.processor,
       event_type: 'chatops-deploy',
-      client_payload: chatops.context.payload
+      client_payload: {
+        ...chatops.context.payload,
+        deploymentId: deployment.data.id
+      }
     })
 
     chatops.info(
