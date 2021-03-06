@@ -1,7 +1,5 @@
-import * as utils from '../utils'
-import * as context from '../context'
 import * as actionSlasher from '../action-slasher'
-import {octokit} from '../octokit'
+import * as chatops from '../chatops'
 
 export const cancelDeployment = actionSlasher.command('cancel-deployment', {
   description: 'Cancels an active deployment',
@@ -13,47 +11,38 @@ export const cancelDeployment = actionSlasher.command('cancel-deployment', {
   },
   async handler(args) {
     // @ts-expect-error FIXME
-    if (!args.id) {
-      throw new Error('No deployment ID specified')
-    }
-
-    // @ts-expect-error FIXME
     const deploymentId = args.id
 
-    const deployment = await octokit.repos.getDeployment({
-      ...context.repository,
+    if (!deploymentId) {
+      chatops.setFailed('You did not provide any deployment ID...')
+      return
+    }
+
+    const {repository} = chatops.context
+
+    const deployment = await chatops.octokit.repos.getDeployment({
+      ...repository,
       deployment_id: deploymentId
     })
 
-    await octokit.repos.createDeploymentStatus({
-      ...context.repository,
+    await chatops.octokit.repos.createDeploymentStatus({
+      ...repository,
       deployment_id: deploymentId,
       state: 'error',
       description: 'Deployment cancelled'
     })
 
-    if (context.commentId) {
-      const comment = await octokit.issues.getComment({
-        ...context.repository,
-        comment_id: context.commentId
-      })
+    chatops.info(
+      `
+        Deployment with ID ${deploymentId} to ${deployment.data.environment} was cancelled...
 
-      await octokit.issues.updateComment({
-        ...context.repository,
-        comment_id: context.commentId,
-        body: utils.appendBody(
-          comment.data.body || '',
-          `
-          ${utils.Icon.BlackCircle} Deployment with ID ${deploymentId} to ${deployment.data.environment} was cancelled...
+        If you also want do delete the deployment, use the command:
 
-          If you also want do delete the deployment, use the command:
-
-          \`\`\`
-          /delete-deployment --id ${deploymentId}
-          \`\`\`
-          `
-        )
-      })
-    }
+        \`\`\`
+        /delete-deployment --id ${deploymentId}
+        \`\`\`
+      `,
+      {icon: chatops.Icon.BlackCircle, shouldUpdateComment: true}
+    )
   }
 })

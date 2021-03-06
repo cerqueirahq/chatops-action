@@ -14,3 +14,10 @@ jobs:
           token: ${{ secrets.CHATOPS_TOKEN }}
           project: chatops-action
           processor: ${{ github.repository }}
+          environments: >
+            [
+              { "id": "prd", "name": "production" },
+              { "id": "stg", "name": "staging" },
+              { "id": "tst", "name": "test" },
+              { "id": "dev", "name": "development", default: true }
+            ]

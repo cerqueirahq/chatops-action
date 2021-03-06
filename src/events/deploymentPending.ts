@@ -1,29 +1,25 @@
 import * as actionSlasher from '../action-slasher'
-import * as context from '../context'
-import {octokit} from '../octokit'
-import * as utils from '../utils'
+import * as chatops from '../chatops'
 
 export const deploymentPending = actionSlasher.event('deployment-pending', {
   description: 'An event triggered when a deployment is pending',
   async handler() {
-    const comment = await octokit.issues.getComment({
-      ...context.repository,
-      comment_id: context.commentId
-    })
+    const {repository, deploymentId} = chatops.context
 
-    await octokit.repos.createDeploymentStatus({
-      ...context.repository,
-      deployment_id: context.deploymentId,
+    if (!deploymentId) {
+      chatops.setFailed('No deployment ID available...')
+      return
+    }
+
+    await chatops.octokit.repos.createDeploymentStatus({
+      ...repository,
+      deployment_id: deploymentId,
       state: 'pending'
     })
 
-    await octokit.issues.updateComment({
-      ...context.repository,
-      comment_id: context.commentId,
-      body: utils.appendBody(
-        comment.data.body || '',
-        `${utils.Icon.HourGlass} Deployment starting soon...`
-      )
+    chatops.info('Deployment starting soon...', {
+      icon: chatops.Icon.HourGlass,
+      shouldUpdateComment: true
     })
   }
 })

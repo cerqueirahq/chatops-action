@@ -1,7 +1,5 @@
-import * as utils from '../utils'
-import * as context from '../context'
 import * as actionSlasher from '../action-slasher'
-import {octokit} from '../octokit'
+import * as chatops from '../chatops'
 
 export const deploy = actionSlasher.command('deploy', {
   description: 'Deploys the project to the specified environment',
@@ -12,34 +10,40 @@ export const deploy = actionSlasher.command('deploy', {
     })
   },
   async handler(args) {
-    if (!context.isPullRequest) {
-      throw new Error(`ChatOps doesn't support deploying from issues yet`)
+    if (!chatops.context.isPullRequest) {
+      chatops.setFailed(`ChatOps doesn't support deploying from issues yet`)
+      return
     }
 
-    let environment = context.findDefaultEnvironment()
+    let environment = chatops.context.findDefaultEnvironment()
 
     // @ts-expect-error FIXME
     if (args.env) {
       // @ts-expect-error FIXME
-      environment = context.findEnvironment(args.env)
+      environment = chatops.context.findEnvironment(args.env)
     }
 
     if (!environment) {
-      // @ts-expect-error FIXME
-      throw new Error(`The target environment "${args.env}" is not configured.`)
+      chatops.setFailed(
+        // @ts-expect-error FIXME
+        `The target environment "${args.env}" is not configured.`
+      )
+      return
     }
+
+    const {repository} = chatops.context
 
     const activeDeployment = (
       await Promise.all(
         (
-          await octokit.repos.listDeployments({
-            ...context.repository,
+          await chatops.octokit.repos.listDeployments({
+            ...repository,
             environment: environment.name
           })
         ).data.map(async deployment => {
           const status = (
-            await octokit.repos.listDeploymentStatuses({
-              ...context.repository,
+            await chatops.octokit.repos.listDeploymentStatuses({
+              ...repository,
               deployment_id: deployment.id
             })
           ).data[0]
@@ -54,10 +58,9 @@ export const deploy = actionSlasher.command('deploy', {
     ).find(({active}) => active)
 
     if (activeDeployment) {
-      const errorMessage = utils.appendBody(
-        context.commentBody,
-        `\n${utils.Icon.Error} A deployment for ${environment.name} environment is already ${activeDeployment.status.state}.
-        
+      chatops.setFailed(
+        `\n${chatops.Icon.Error} A deployment for ${environment.name} environment is already ${activeDeployment.status.state}.
+
         Wait for its completion before triggering a new deployment to this environment.
 
         If you want to cancel the active deployment, use the command:
@@ -65,72 +68,67 @@ export const deploy = actionSlasher.command('deploy', {
         \`\`\`
         /cancel-deployment --id ${activeDeployment.deployment.id}
         \`\`\`
-        `
+        `,
+        {icon: undefined, shouldUpdateComment: true}
       )
 
-      await octokit.issues.updateComment({
-        ...context.repository,
-        comment_id: context.commentId,
-        body: errorMessage
-      })
-
-      throw new Error(errorMessage)
+      return
     }
 
     const deploymentOptions = {
-      ...context.repository,
-      ref: context.ref,
+      ...repository,
+      ref: await chatops.context.fetchRef(),
       environment: environment.name,
       environment_url: environment.url,
-      description: `Triggered in PR #${context.issueNumber}`
+      description: `Triggered in PR #${chatops.context.issueNumber}`
     }
 
-    let deployment = await octokit.repos.createDeployment(deploymentOptions)
+    let deployment = await chatops.octokit.repos.createDeployment(
+      deploymentOptions
+    )
 
     // Status code === 202 means GitHub performed an auto-merge
     // and we have to attempt creating the deployment again
     if (deployment.status === 202) {
-      deployment = await octokit.repos.createDeployment(deploymentOptions)
+      chatops.info(deployment.data.message || '')
+
+      deployment = await chatops.octokit.repos.createDeployment(
+        deploymentOptions
+      )
     }
 
     // When status code is something else than 201, even if it's an
     // auto-merge again, we stop execution
     if (deployment.status !== 201) {
-      throw new Error(
+      chatops.setFailed(
         `Could not start a deployment... Endpoint returned ${
           deployment.status
         }: ${JSON.stringify(deployment.data, null, 2)}`
       )
+
+      return
     }
 
     // Set the status of the deployment to queued as it'll be triggered
     // by another workflow which will start in the same state
-    await octokit.repos.createDeploymentStatus({
-      ...context.repository,
+    await chatops.octokit.repos.createDeploymentStatus({
+      ...repository,
       deployment_id: deployment.data.id,
       state: 'queued'
     })
 
-    const eventPayload = {
-      ...context.payload,
-      deploymentId: deployment.data.id
-    }
-
-    await octokit.repos.createDispatchEvent({
-      ...context.processor,
+    await chatops.octokit.repos.createDispatchEvent({
+      ...chatops.context.processor,
       event_type: 'chatops-deploy',
-      client_payload: eventPayload
+      client_payload: {
+        ...chatops.context.payload,
+        deploymentId: deployment.data.id
+      }
     })
 
-    if (context.commentId) {
-      await octokit.issues.updateComment({
-        ...context.repository,
-        comment_id: context.commentId,
-        body: utils.appendBody(
-          context.commentBody,
-          `\n${utils.Icon.Clock} Deployment of \`${context.ref}\` to \`${environment.name}\` has been queued (ID: ${deployment.data.id})...`
-        )
-      })
-    }
+    chatops.info(
+      `\n${chatops.Icon.Clock} Deployment of \`${deploymentOptions.ref}\` to \`${environment.name}\` has been queued (ID: ${deployment.data.id})...`,
+      {icon: undefined, shouldUpdateComment: true}
+    )
   }
 })

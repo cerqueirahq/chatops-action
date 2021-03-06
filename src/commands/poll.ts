@@ -1,7 +1,6 @@
 import {ghPolls} from 'gh-polls'
-import * as context from '../context'
 import * as actionSlasher from '../action-slasher'
-import {octokit} from '../octokit'
+import * as chatops from '../chatops'
 
 export const poll = actionSlasher.command('poll', {
   description: 'Creates a poll using [GitHub Polls](https://gh-polls.com/)',
@@ -17,35 +16,29 @@ export const poll = actionSlasher.command('poll', {
     })
   },
   async handler(args) {
-    if (!context.commentId) {
+    if (!chatops.context.commentId) {
       return
     }
 
     // @ts-expect-error FIXME
     if (args.option.length === 0) {
-      await octokit.issues.updateComment({
-        ...context.repository,
-        comment_id: context.commentId,
-        body: `You did not specified any options for the poll`
-      })
+      chatops.error('You did not specified any options for the poll')
+      return
     }
 
     // @ts-expect-error FIXME
     const ghPoll = await ghPolls(args.option.map(o => o.replace(/^"|"$/g, '')))
 
-    const body = `
-${
-  // @ts-expect-error FIXME
-  args.question ? `#### ${args.question.replace(/^"|"$/g, '')}` : ''
-}
+    chatops.info(
+      `
+        ${
+          // @ts-expect-error FIXME
+          args.question ? `#### ${args.question.replace(/^"|"$/g, '')}` : ''
+        }
 
-${ghPoll.map(o => `[![](${o.image})](${o.vote})`).join('\n')}
-    `
-
-    await octokit.issues.updateComment({
-      ...context.repository,
-      comment_id: context.commentId,
-      body
-    })
+        ${ghPoll.map(o => `[![](${o.image})](${o.vote})`).join('\n')}
+      `,
+      {icon: undefined, shouldUpdateComment: true}
+    )
   }
 })

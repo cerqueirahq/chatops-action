@@ -1,29 +1,24 @@
 import * as actionSlasher from '../action-slasher'
-import * as context from '../context'
-import {octokit} from '../octokit'
-import * as utils from '../utils'
+import * as chatops from '../chatops'
 
 export const deploymentError = actionSlasher.event('deployment-error', {
   description: 'An event triggered when a deployment has an error',
   async handler() {
-    const comment = await octokit.issues.getComment({
-      ...context.repository,
-      comment_id: context.commentId
-    })
+    const {repository, deploymentId} = chatops.context
 
-    await octokit.repos.createDeploymentStatus({
-      ...context.repository,
-      deployment_id: context.deploymentId,
+    if (!deploymentId) {
+      chatops.setFailed('No deployment ID available...')
+      return
+    }
+
+    await chatops.octokit.repos.createDeploymentStatus({
+      ...repository,
+      deployment_id: deploymentId,
       state: 'error'
     })
 
-    await octokit.issues.updateComment({
-      ...context.repository,
-      comment_id: context.commentId,
-      body: utils.appendBody(
-        comment.data.body || '',
-        `${utils.Icon.Error} There was an error with the deployment... ${utils.Icon.Cry}`
-      )
-    })
+    chatops.error(
+      `There was an error with the deployment... ${chatops.Icon.Cry}`
+    )
   }
 })

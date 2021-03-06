@@ -1,5 +1,5 @@
 import * as github from '@actions/github'
-import * as octokit from '../octokit'
+import * as octokit from './octokit'
 import {Command, command} from './command'
 
 const getArgumentsList = (cmd: Command): string =>

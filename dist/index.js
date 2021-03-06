@@ -120,7 +120,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.buildHelpCommand = void 0;
 const github = __importStar(__webpack_require__(5438));
-const octokit = __importStar(__webpack_require__(3258));
+const octokit = __importStar(__webpack_require__(2962));
 const command_1 = __webpack_require__(6899);
 const getArgumentsList = (cmd) => Object.keys(cmd.args)
     .map(argName => {
@@ -220,6 +220,39 @@ __exportStar(__webpack_require__(5450), exports);
 
 /***/ }),
 
+/***/ 2962:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.octokit = void 0;
+const core = __importStar(__webpack_require__(2186));
+const github = __importStar(__webpack_require__(5438));
+exports.octokit = github.getOctokit(core.getInput('token', { required: true }), { previews: ['flash', 'ant-man'] });
+
+
+/***/ }),
+
 /***/ 5450:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
@@ -315,6 +348,381 @@ exports.run = run;
 
 /***/ }),
 
+/***/ 3482:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Log = exports.Icon = void 0;
+const core = __importStar(__webpack_require__(2186));
+var Icon;
+(function (Icon) {
+    Icon["Clock"] = "\uD83D\uDD50";
+    Icon["Rocket"] = "\uD83D\uDE80";
+    Icon["ArrowRight"] = "\u27A1\uFE0F";
+    Icon["Check"] = "\u2705";
+    Icon["HourGlass"] = "\u23F3";
+    Icon["FastForward"] = "\u23E9";
+    Icon["Cry"] = "\uD83D\uDE22";
+    Icon["Error"] = "\u274C";
+    Icon["BlackCircle"] = "\u26AB";
+    Icon["Info"] = "\u2139\uFE0F";
+    Icon["Warning"] = "\u26A0\uFE0F";
+    Icon["Magnifier"] = "\uD83D\uDD0D";
+})(Icon = exports.Icon || (exports.Icon = {}));
+const defaultOptions = { shouldUpdateComment: true };
+class Log {
+    constructor(context, octokit) {
+        this._context = context;
+        this._octokit = octokit;
+    }
+    debug(message, options = Object.assign(Object.assign({}, defaultOptions), { icon: Icon.Magnifier })) {
+        if (options.shouldUpdateComment) {
+            this.updateComment(message, options);
+        }
+        core.debug(message);
+    }
+    info(message, options = Object.assign(Object.assign({}, defaultOptions), { icon: Icon.Info })) {
+        if (options.shouldUpdateComment) {
+            this.updateComment(message, options);
+        }
+        core.info(message);
+    }
+    warning(message, options = Object.assign(Object.assign({}, defaultOptions), { icon: Icon.Warning })) {
+        if (options.shouldUpdateComment) {
+            this.updateComment(message, options);
+        }
+        core.warning(message);
+    }
+    error(message, options = Object.assign(Object.assign({}, defaultOptions), { icon: Icon.Error })) {
+        if (options.shouldUpdateComment) {
+            this.updateComment(message, options);
+        }
+        core.error(message);
+    }
+    setFailed(message, options = Object.assign(Object.assign({}, defaultOptions), { icon: Icon.Error })) {
+        if (options.shouldUpdateComment) {
+            this.updateComment(message, options);
+        }
+        core.setFailed(message);
+    }
+    updateComment(message, options) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!this._context.commentId) {
+                return;
+            }
+            const reqOptions = Object.assign(Object.assign({}, this._context.repository), { comment_id: this._context.commentId });
+            const getResp = yield this._octokit.issues.getComment(reqOptions);
+            if (getResp.status !== 200) {
+                return;
+            }
+            const body = this.appendBody(getResp.data.body || '', `${(options === null || options === void 0 ? void 0 : options.icon) ? `${options.icon} ` : ''} ${message}`);
+            const updateResp = yield this._octokit.issues.updateComment(Object.assign(Object.assign({}, reqOptions), { body }));
+            return {
+                id: updateResp.data.id,
+                body: updateResp.data.body
+            };
+        });
+    }
+    trimBody(body) {
+        return body
+            .split('\n')
+            .map(l => l.trimStart())
+            .join('\n');
+    }
+    appendBody(original, body) {
+        return this.trimBody(`${original}\n${body}`);
+    }
+}
+exports.Log = Log;
+
+
+/***/ }),
+
+/***/ 8363:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Context = void 0;
+const core = __importStar(__webpack_require__(2186));
+const github = __importStar(__webpack_require__(5438));
+class Context {
+    constructor(octokit) {
+        var _a;
+        this.payload = this.inputFromJSON('payload', github.context);
+        this.environments = this.inputFromJSON('environments', [], { required: true });
+        // @ts-expect-error FIXME: prop doesn't exist on GitHub context but will on event payload
+        this.deploymentId = this.payload.deploymentId;
+        this.issueNumber = this.payload.issue.number;
+        this.commentId = (_a = this.payload.payload.comment) === null || _a === void 0 ? void 0 : _a.id;
+        this.repository = this.payload.repo;
+        this.message = core.getInput('message');
+        this.isPullRequest = 'pull_request' in this.payload.issue;
+        this.project =
+            core.getInput('project') ||
+                `${this.repository.owner}/${this.repository.repo}`;
+        this._octokit = octokit;
+    }
+    get processor() {
+        const [processorOwner, processorRepo] = core
+            .getInput('processor')
+            .split('/');
+        if (!processorOwner || !processorRepo) {
+            return this.repository;
+        }
+        return { owner: processorOwner, repo: processorRepo };
+    }
+    fetchRef() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const input = core.getInput('ref');
+            if (input) {
+                return input;
+            }
+            if (this.isPullRequest) {
+                const pr = yield this._octokit.pulls.get(Object.assign(Object.assign({}, this.repository), { pull_number: this.issueNumber }));
+                return pr.data.head.ref;
+            }
+            return github.context.ref;
+        });
+    }
+    findEnvironment(idOrName) {
+        return this.environments.find(env => env.id === idOrName || env.name === idOrName);
+    }
+    findDefaultEnvironment() {
+        return this.environments.find(env => env.default);
+    }
+    inputFromJSON(name, fallback, options) {
+        return JSON.parse(core.getInput(name, options) || JSON.stringify(fallback));
+    }
+}
+exports.Context = Context;
+
+
+/***/ }),
+
+/***/ 9032:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.setFailed = exports.warn = exports.info = exports.error = exports.debug = exports.context = exports.octokit = exports.Icon = void 0;
+const core = __importStar(__webpack_require__(2186));
+const github = __importStar(__webpack_require__(5438));
+const context_1 = __webpack_require__(8363);
+const Log_1 = __webpack_require__(3482);
+var log_1 = __webpack_require__(8540);
+Object.defineProperty(exports, "Icon", ({ enumerable: true, get: function () { return log_1.Icon; } }));
+exports.octokit = github.getOctokit(core.getInput('token', { required: true }), { previews: ['flash', 'ant-man'] });
+exports.context = new context_1.Context(exports.octokit);
+const log = new Log_1.Log(exports.context, exports.octokit);
+exports.debug = log.debug.bind(log);
+exports.error = log.error.bind(log);
+exports.info = log.info.bind(log);
+exports.warn = log.warning.bind(log);
+exports.setFailed = log.setFailed.bind(log);
+
+
+/***/ }),
+
+/***/ 8540:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Log = exports.Icon = void 0;
+const core = __importStar(__webpack_require__(2186));
+var Icon;
+(function (Icon) {
+    Icon["Clock"] = "\uD83D\uDD50";
+    Icon["Rocket"] = "\uD83D\uDE80";
+    Icon["ArrowRight"] = "\u27A1\uFE0F";
+    Icon["Check"] = "\u2705";
+    Icon["HourGlass"] = "\u23F3";
+    Icon["FastForward"] = "\u23E9";
+    Icon["Cry"] = "\uD83D\uDE22";
+    Icon["Error"] = "\u274C";
+    Icon["BlackCircle"] = "\u26AB";
+    Icon["Info"] = "\u2139\uFE0F";
+    Icon["Warning"] = "\u26A0\uFE0F";
+    Icon["Magnifier"] = "\uD83D\uDD0D";
+})(Icon = exports.Icon || (exports.Icon = {}));
+const defaultOptions = { shouldUpdateComment: true };
+class Log {
+    constructor(context, octokit) {
+        this._context = context;
+        this._octokit = octokit;
+    }
+    debug(message, options = Object.assign(Object.assign({}, defaultOptions), { icon: Icon.Magnifier })) {
+        if (options.shouldUpdateComment) {
+            this.updateComment(message, options);
+        }
+        core.debug(message);
+    }
+    info(message, options = Object.assign(Object.assign({}, defaultOptions), { icon: Icon.Info })) {
+        if (options.shouldUpdateComment) {
+            this.updateComment(message, options);
+        }
+        core.info(message);
+    }
+    warning(message, options = Object.assign(Object.assign({}, defaultOptions), { icon: Icon.Warning })) {
+        if (options.shouldUpdateComment) {
+            this.updateComment(message, options);
+        }
+        core.warning(message);
+    }
+    error(message, options = Object.assign(Object.assign({}, defaultOptions), { icon: Icon.Error })) {
+        if (options.shouldUpdateComment) {
+            this.updateComment(message, options);
+        }
+        core.error(message);
+    }
+    setFailed(message, options = Object.assign(Object.assign({}, defaultOptions), { icon: Icon.Error })) {
+        if (options.shouldUpdateComment) {
+            this.updateComment(message, options);
+        }
+        core.setFailed(message);
+    }
+    updateComment(message, options) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!this._context.commentId) {
+                return;
+            }
+            const reqOptions = Object.assign(Object.assign({}, this._context.repository), { comment_id: this._context.commentId });
+            const getResp = yield this._octokit.issues.getComment(reqOptions);
+            if (getResp.status !== 200) {
+                return;
+            }
+            const body = this.appendBody(getResp.data.body || '', `${(options === null || options === void 0 ? void 0 : options.icon) ? `${options.icon} ` : ''} ${message}`);
+            const updateResp = yield this._octokit.issues.updateComment(Object.assign(Object.assign({}, reqOptions), { body }));
+            return {
+                id: updateResp.data.id,
+                body: updateResp.data.body
+            };
+        });
+    }
+    trimBody(body) {
+        return body
+            .split('\n')
+            .map(l => l.trimStart())
+            .join('\n');
+    }
+    appendBody(original, body) {
+        return this.trimBody(`${original}\n${body}`);
+    }
+}
+exports.Log = Log;
+
+
+/***/ }),
+
 /***/ 9142:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
@@ -350,10 +758,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.cancelDeployment = void 0;
-const utils = __importStar(__webpack_require__(918));
-const context = __importStar(__webpack_require__(3842));
 const actionSlasher = __importStar(__webpack_require__(1558));
-const octokit_1 = __webpack_require__(3258);
+const chatops = __importStar(__webpack_require__(9032));
 exports.cancelDeployment = actionSlasher.command('cancel-deployment', {
     description: 'Cancels an active deployment',
     definition(c) {
@@ -365,25 +771,23 @@ exports.cancelDeployment = actionSlasher.command('cancel-deployment', {
     handler(args) {
         return __awaiter(this, void 0, void 0, function* () {
             // @ts-expect-error FIXME
-            if (!args.id) {
-                throw new Error('No deployment ID specified');
-            }
-            // @ts-expect-error FIXME
             const deploymentId = args.id;
-            const deployment = yield octokit_1.octokit.repos.getDeployment(Object.assign(Object.assign({}, context.repository), { deployment_id: deploymentId }));
-            yield octokit_1.octokit.repos.createDeploymentStatus(Object.assign(Object.assign({}, context.repository), { deployment_id: deploymentId, state: 'error', description: 'Deployment cancelled' }));
-            if (context.commentId) {
-                const comment = yield octokit_1.octokit.issues.getComment(Object.assign(Object.assign({}, context.repository), { comment_id: context.commentId }));
-                yield octokit_1.octokit.issues.updateComment(Object.assign(Object.assign({}, context.repository), { comment_id: context.commentId, body: utils.appendBody(comment.data.body || '', `
-          ${utils.Icon.BlackCircle} Deployment with ID ${deploymentId} to ${deployment.data.environment} was cancelled...
-
-          If you also want do delete the deployment, use the command:
-
-          \`\`\`
-          /delete-deployment --id ${deploymentId}
-          \`\`\`
-          `) }));
+            if (!deploymentId) {
+                chatops.setFailed('You did not provide any deployment ID...');
+                return;
             }
+            const { repository } = chatops.context;
+            const deployment = yield chatops.octokit.repos.getDeployment(Object.assign(Object.assign({}, repository), { deployment_id: deploymentId }));
+            yield chatops.octokit.repos.createDeploymentStatus(Object.assign(Object.assign({}, repository), { deployment_id: deploymentId, state: 'error', description: 'Deployment cancelled' }));
+            chatops.info(`
+        Deployment with ID ${deploymentId} to ${deployment.data.environment} was cancelled...
+
+        If you also want do delete the deployment, use the command:
+
+        \`\`\`
+        /delete-deployment --id ${deploymentId}
+        \`\`\`
+      `, { icon: chatops.Icon.BlackCircle, shouldUpdateComment: true });
         });
     }
 });
@@ -426,10 +830,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.deleteDeployment = void 0;
-const utils = __importStar(__webpack_require__(918));
-const context = __importStar(__webpack_require__(3842));
 const actionSlasher = __importStar(__webpack_require__(1558));
-const octokit_1 = __webpack_require__(3258);
+const chatops = __importStar(__webpack_require__(9032));
 exports.deleteDeployment = actionSlasher.command('delete-deployment', {
     description: 'Deletes a deployment',
     definition(c) {
@@ -441,16 +843,17 @@ exports.deleteDeployment = actionSlasher.command('delete-deployment', {
     handler(args) {
         return __awaiter(this, void 0, void 0, function* () {
             // @ts-expect-error FIXME
-            if (!args.id) {
-                throw new Error('No deployment ID specified');
-            }
-            // @ts-expect-error FIXME
             const deploymentId = args.id;
-            yield octokit_1.octokit.repos.deleteDeployment(Object.assign(Object.assign({}, context.repository), { deployment_id: deploymentId }));
-            if (context.commentId) {
-                const comment = yield octokit_1.octokit.issues.getComment(Object.assign(Object.assign({}, context.repository), { comment_id: context.commentId }));
-                yield octokit_1.octokit.issues.updateComment(Object.assign(Object.assign({}, context.repository), { comment_id: context.commentId, body: utils.appendBody(comment.data.body || '', `${utils.Icon.BlackCircle} Deployment with ID ${deploymentId} has been deleted...`) }));
+            if (!deploymentId) {
+                chatops.setFailed('You did not provide any deployment ID...');
+                return;
             }
+            const { repository } = chatops.context;
+            yield chatops.octokit.repos.deleteDeployment(Object.assign(Object.assign({}, repository), { deployment_id: deploymentId }));
+            chatops.info(`Deployment with ID ${deploymentId} has been deleted...`, {
+                icon: chatops.Icon.BlackCircle,
+                shouldUpdateComment: true
+            });
         });
     }
 });
@@ -493,10 +896,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.deploy = void 0;
-const utils = __importStar(__webpack_require__(918));
-const context = __importStar(__webpack_require__(3842));
 const actionSlasher = __importStar(__webpack_require__(1558));
-const octokit_1 = __webpack_require__(3258);
+const chatops = __importStar(__webpack_require__(9032));
 exports.deploy = actionSlasher.command('deploy', {
     description: 'Deploys the project to the specified environment',
     definition(c) {
@@ -507,21 +908,25 @@ exports.deploy = actionSlasher.command('deploy', {
     },
     handler(args) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!context.isPullRequest) {
-                throw new Error(`ChatOps doesn't support deploying from issues yet`);
+            if (!chatops.context.isPullRequest) {
+                chatops.setFailed(`ChatOps doesn't support deploying from issues yet`);
+                return;
             }
-            let environment = context.findDefaultEnvironment();
+            let environment = chatops.context.findDefaultEnvironment();
             // @ts-expect-error FIXME
             if (args.env) {
                 // @ts-expect-error FIXME
-                environment = context.findEnvironment(args.env);
+                environment = chatops.context.findEnvironment(args.env);
             }
             if (!environment) {
+                chatops.setFailed(
                 // @ts-expect-error FIXME
-                throw new Error(`The target environment "${args.env}" is not configured.`);
+                `The target environment "${args.env}" is not configured.`);
+                return;
             }
-            const activeDeployment = (yield Promise.all((yield octokit_1.octokit.repos.listDeployments(Object.assign(Object.assign({}, context.repository), { environment: environment.name }))).data.map((deployment) => __awaiter(this, void 0, void 0, function* () {
-                const status = (yield octokit_1.octokit.repos.listDeploymentStatuses(Object.assign(Object.assign({}, context.repository), { deployment_id: deployment.id }))).data[0];
+            const { repository } = chatops.context;
+            const activeDeployment = (yield Promise.all((yield chatops.octokit.repos.listDeployments(Object.assign(Object.assign({}, repository), { environment: environment.name }))).data.map((deployment) => __awaiter(this, void 0, void 0, function* () {
+                const status = (yield chatops.octokit.repos.listDeploymentStatuses(Object.assign(Object.assign({}, repository), { deployment_id: deployment.id }))).data[0];
                 return {
                     deployment,
                     status,
@@ -529,8 +934,8 @@ exports.deploy = actionSlasher.command('deploy', {
                 };
             })))).find(({ active }) => active);
             if (activeDeployment) {
-                const errorMessage = utils.appendBody(context.commentBody, `\n${utils.Icon.Error} A deployment for ${environment.name} environment is already ${activeDeployment.status.state}.
-        
+                chatops.setFailed(`\n${chatops.Icon.Error} A deployment for ${environment.name} environment is already ${activeDeployment.status.state}.
+
         Wait for its completion before triggering a new deployment to this environment.
 
         If you want to cancel the active deployment, use the command:
@@ -538,30 +943,28 @@ exports.deploy = actionSlasher.command('deploy', {
         \`\`\`
         /cancel-deployment --id ${activeDeployment.deployment.id}
         \`\`\`
-        `);
-                yield octokit_1.octokit.issues.updateComment(Object.assign(Object.assign({}, context.repository), { comment_id: context.commentId, body: errorMessage }));
-                throw new Error(errorMessage);
+        `, { icon: undefined, shouldUpdateComment: true });
+                return;
             }
-            const deploymentOptions = Object.assign(Object.assign({}, context.repository), { ref: context.ref, environment: environment.name, environment_url: environment.url, description: `Triggered in PR #${context.issueNumber}` });
-            let deployment = yield octokit_1.octokit.repos.createDeployment(deploymentOptions);
+            const deploymentOptions = Object.assign(Object.assign({}, repository), { ref: yield chatops.context.fetchRef(), environment: environment.name, environment_url: environment.url, description: `Triggered in PR #${chatops.context.issueNumber}` });
+            let deployment = yield chatops.octokit.repos.createDeployment(deploymentOptions);
             // Status code === 202 means GitHub performed an auto-merge
             // and we have to attempt creating the deployment again
             if (deployment.status === 202) {
-                deployment = yield octokit_1.octokit.repos.createDeployment(deploymentOptions);
+                chatops.info(deployment.data.message || '');
+                deployment = yield chatops.octokit.repos.createDeployment(deploymentOptions);
             }
             // When status code is something else than 201, even if it's an
             // auto-merge again, we stop execution
             if (deployment.status !== 201) {
-                throw new Error(`Could not start a deployment... Endpoint returned ${deployment.status}: ${JSON.stringify(deployment.data, null, 2)}`);
+                chatops.setFailed(`Could not start a deployment... Endpoint returned ${deployment.status}: ${JSON.stringify(deployment.data, null, 2)}`);
+                return;
             }
             // Set the status of the deployment to queued as it'll be triggered
             // by another workflow which will start in the same state
-            yield octokit_1.octokit.repos.createDeploymentStatus(Object.assign(Object.assign({}, context.repository), { deployment_id: deployment.data.id, state: 'queued' }));
-            const eventPayload = Object.assign(Object.assign({}, context.payload), { deploymentId: deployment.data.id });
-            yield octokit_1.octokit.repos.createDispatchEvent(Object.assign(Object.assign({}, context.processor), { event_type: 'chatops-deploy', client_payload: eventPayload }));
-            if (context.commentId) {
-                yield octokit_1.octokit.issues.updateComment(Object.assign(Object.assign({}, context.repository), { comment_id: context.commentId, body: utils.appendBody(context.commentBody, `\n${utils.Icon.Clock} Deployment of \`${context.ref}\` to \`${environment.name}\` has been queued (ID: ${deployment.data.id})...`) }));
-            }
+            yield chatops.octokit.repos.createDeploymentStatus(Object.assign(Object.assign({}, repository), { deployment_id: deployment.data.id, state: 'queued' }));
+            yield chatops.octokit.repos.createDispatchEvent(Object.assign(Object.assign({}, chatops.context.processor), { event_type: 'chatops-deploy', client_payload: Object.assign(Object.assign({}, chatops.context.payload), { deploymentId: deployment.data.id }) }));
+            chatops.info(`\n${chatops.Icon.Clock} Deployment of \`${deploymentOptions.ref}\` to \`${environment.name}\` has been queued (ID: ${deployment.data.id})...`, { icon: undefined, shouldUpdateComment: true });
         });
     }
 });
@@ -629,9 +1032,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.poll = void 0;
 const gh_polls_1 = __webpack_require__(1460);
-const context = __importStar(__webpack_require__(3842));
 const actionSlasher = __importStar(__webpack_require__(1558));
-const octokit_1 = __webpack_require__(3258);
+const chatops = __importStar(__webpack_require__(9032));
 exports.poll = actionSlasher.command('poll', {
     description: 'Creates a poll using [GitHub Polls](https://gh-polls.com/)',
     definition(c) {
@@ -646,106 +1048,26 @@ exports.poll = actionSlasher.command('poll', {
     },
     handler(args) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!context.commentId) {
+            if (!chatops.context.commentId) {
                 return;
             }
             // @ts-expect-error FIXME
             if (args.option.length === 0) {
-                yield octokit_1.octokit.issues.updateComment(Object.assign(Object.assign({}, context.repository), { comment_id: context.commentId, body: `You did not specified any options for the poll` }));
+                chatops.error('You did not specified any options for the poll');
+                return;
             }
             // @ts-expect-error FIXME
             const ghPoll = yield gh_polls_1.ghPolls(args.option.map(o => o.replace(/^"|"$/g, '')));
-            const body = `
-${
+            chatops.info(`
+        ${
             // @ts-expect-error FIXME
             args.question ? `#### ${args.question.replace(/^"|"$/g, '')}` : ''}
 
-${ghPoll.map(o => `[![](${o.image})](${o.vote})`).join('\n')}
-    `;
-            yield octokit_1.octokit.issues.updateComment(Object.assign(Object.assign({}, context.repository), { comment_id: context.commentId, body }));
+        ${ghPoll.map(o => `[![](${o.image})](${o.vote})`).join('\n')}
+      `, { icon: undefined, shouldUpdateComment: true });
         });
     }
 });
-
-
-/***/ }),
-
-/***/ 3842:
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var _a, _b, _c, _d, _e, _f, _g;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.log = exports.deploymentId = exports.processor = exports.repository = exports.ref = exports.commentBody = exports.commentId = exports.issueNumber = exports.isPullRequest = exports.payload = exports.findDefaultEnvironment = exports.findEnvironment = exports.environments = void 0;
-const core = __importStar(__webpack_require__(2186));
-const github = __importStar(__webpack_require__(5438));
-const [processorOwner, processorRepo] = (core.getInput('processor') ||
-    `${github.context.repo.owner}/${github.context.repo.repo}`).split('/');
-const eventPayload = JSON.parse(core.getInput('payload') || '{}');
-const environmentsInput = JSON.parse(core.getInput('environments') || '[]');
-exports.environments = environmentsInput.length > 0
-    ? environmentsInput
-    : [
-        {
-            id: 'prd',
-            name: 'production',
-            default: false,
-            description: 'The live, production environment'
-        },
-        {
-            id: 'stg',
-            name: 'staging',
-            default: false,
-            description: 'The staging environment'
-        },
-        {
-            id: 'tst',
-            name: 'test',
-            default: false,
-            description: 'The testing environment'
-        },
-        {
-            id: 'dev',
-            name: 'development',
-            default: true,
-            description: 'The development environment'
-        }
-    ];
-const findEnvironment = (idOrName) => exports.environments.find(env => env.id === idOrName || env.name === idOrName);
-exports.findEnvironment = findEnvironment;
-const findDefaultEnvironment = () => exports.environments.find(env => env.default);
-exports.findDefaultEnvironment = findDefaultEnvironment;
-exports.payload = eventPayload
-    ? Object.assign(Object.assign({}, github.context.payload), eventPayload) : github.context.payload;
-exports.isPullRequest = !!((_a = exports.payload.issue) === null || _a === void 0 ? void 0 : _a.pull_request);
-exports.issueNumber = (_b = exports.payload.issue) === null || _b === void 0 ? void 0 : _b.number;
-exports.commentId = (_c = exports.payload.comment) === null || _c === void 0 ? void 0 : _c.id;
-exports.commentBody = (_d = exports.payload.comment) === null || _d === void 0 ? void 0 : _d.body;
-exports.ref = (_g = (_f = (_e = exports.payload.issue) === null || _e === void 0 ? void 0 : _e.pull_request) === null || _f === void 0 ? void 0 : _f.head) === null || _g === void 0 ? void 0 : _g.ref;
-exports.repository = exports.payload.repo || github.context.repo;
-exports.processor = { owner: processorOwner, repo: processorRepo };
-exports.deploymentId = exports.payload.deploymentId;
-exports.log = core.getInput('log');
 
 
 /***/ }),
@@ -786,16 +1108,18 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.deploymentError = void 0;
 const actionSlasher = __importStar(__webpack_require__(1558));
-const context = __importStar(__webpack_require__(3842));
-const octokit_1 = __webpack_require__(3258);
-const utils = __importStar(__webpack_require__(918));
+const chatops = __importStar(__webpack_require__(9032));
 exports.deploymentError = actionSlasher.event('deployment-error', {
     description: 'An event triggered when a deployment has an error',
     handler() {
         return __awaiter(this, void 0, void 0, function* () {
-            const comment = yield octokit_1.octokit.issues.getComment(Object.assign(Object.assign({}, context.repository), { comment_id: context.commentId }));
-            yield octokit_1.octokit.repos.createDeploymentStatus(Object.assign(Object.assign({}, context.repository), { deployment_id: context.deploymentId, state: 'error' }));
-            yield octokit_1.octokit.issues.updateComment(Object.assign(Object.assign({}, context.repository), { comment_id: context.commentId, body: utils.appendBody(comment.data.body || '', `${utils.Icon.Error} There was an error with the deployment... ${utils.Icon.Cry}`) }));
+            const { repository, deploymentId } = chatops.context;
+            if (!deploymentId) {
+                chatops.setFailed('No deployment ID available...');
+                return;
+            }
+            yield chatops.octokit.repos.createDeploymentStatus(Object.assign(Object.assign({}, repository), { deployment_id: deploymentId, state: 'error' }));
+            chatops.error(`There was an error with the deployment... ${chatops.Icon.Cry}`);
         });
     }
 });
@@ -839,16 +1163,21 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.deploymentFailure = void 0;
 const actionSlasher = __importStar(__webpack_require__(1558));
-const context = __importStar(__webpack_require__(3842));
-const octokit_1 = __webpack_require__(3258);
-const utils = __importStar(__webpack_require__(918));
+const chatops = __importStar(__webpack_require__(9032));
 exports.deploymentFailure = actionSlasher.event('deployment-failure', {
     description: 'An event triggered when a deployment has failed',
     handler() {
         return __awaiter(this, void 0, void 0, function* () {
-            const comment = yield octokit_1.octokit.issues.getComment(Object.assign(Object.assign({}, context.repository), { comment_id: context.commentId }));
-            yield octokit_1.octokit.repos.createDeploymentStatus(Object.assign(Object.assign({}, context.repository), { deployment_id: context.deploymentId, state: 'failure' }));
-            yield octokit_1.octokit.issues.updateComment(Object.assign(Object.assign({}, context.repository), { comment_id: context.commentId, body: utils.appendBody(comment.data.body || '', `${utils.Icon.Error} Deployment failed... ${utils.Icon.Cry}`) }));
+            const { repository, deploymentId } = chatops.context;
+            if (!deploymentId) {
+                chatops.setFailed('No deployment ID available...');
+                return;
+            }
+            yield chatops.octokit.repos.createDeploymentStatus(Object.assign(Object.assign({}, repository), { deployment_id: deploymentId, state: 'failure' }));
+            chatops.error(`Deployment failed... ${chatops.Icon.Cry}`, {
+                icon: chatops.Icon.Rocket,
+                shouldUpdateComment: true
+            });
         });
     }
 });
@@ -892,16 +1221,21 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.deploymentInProgress = void 0;
 const actionSlasher = __importStar(__webpack_require__(1558));
-const context = __importStar(__webpack_require__(3842));
-const octokit_1 = __webpack_require__(3258);
-const utils = __importStar(__webpack_require__(918));
+const chatops = __importStar(__webpack_require__(9032));
 exports.deploymentInProgress = actionSlasher.event('deployment-in-progress', {
     description: 'An event triggered when a deployment is in progress',
     handler() {
         return __awaiter(this, void 0, void 0, function* () {
-            const comment = yield octokit_1.octokit.issues.getComment(Object.assign(Object.assign({}, context.repository), { comment_id: context.commentId }));
-            yield octokit_1.octokit.repos.createDeploymentStatus(Object.assign(Object.assign({}, context.repository), { deployment_id: context.deploymentId, state: 'in_progress' }));
-            yield octokit_1.octokit.issues.updateComment(Object.assign(Object.assign({}, context.repository), { comment_id: context.commentId, body: utils.appendBody(comment.data.body || '', `${utils.Icon.Rocket} Deployment in progress...`) }));
+            const { repository, deploymentId } = chatops.context;
+            if (!deploymentId) {
+                chatops.setFailed('No deployment ID available...');
+                return;
+            }
+            yield chatops.octokit.repos.createDeploymentStatus(Object.assign(Object.assign({}, repository), { deployment_id: deploymentId, state: 'in_progress' }));
+            chatops.info('Deployment in progress...', {
+                icon: chatops.Icon.Rocket,
+                shouldUpdateComment: true
+            });
         });
     }
 });
@@ -945,15 +1279,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.deploymentLog = void 0;
 const actionSlasher = __importStar(__webpack_require__(1558));
-const context = __importStar(__webpack_require__(3842));
-const octokit_1 = __webpack_require__(3258);
-const utils = __importStar(__webpack_require__(918));
+const chatops = __importStar(__webpack_require__(9032));
 exports.deploymentLog = actionSlasher.event('deployment-log', {
     description: 'An event triggered when a deployment has emitted some log',
     handler() {
         return __awaiter(this, void 0, void 0, function* () {
-            const comment = yield octokit_1.octokit.issues.getComment(Object.assign(Object.assign({}, context.repository), { comment_id: context.commentId }));
-            yield octokit_1.octokit.issues.updateComment(Object.assign(Object.assign({}, context.repository), { comment_id: context.commentId, body: utils.appendBody(comment.data.body || '', `${utils.Icon.Info} ${context.log}`) }));
+            chatops.info(chatops.context.message);
         });
     }
 });
@@ -997,16 +1328,21 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.deploymentPending = void 0;
 const actionSlasher = __importStar(__webpack_require__(1558));
-const context = __importStar(__webpack_require__(3842));
-const octokit_1 = __webpack_require__(3258);
-const utils = __importStar(__webpack_require__(918));
+const chatops = __importStar(__webpack_require__(9032));
 exports.deploymentPending = actionSlasher.event('deployment-pending', {
     description: 'An event triggered when a deployment is pending',
     handler() {
         return __awaiter(this, void 0, void 0, function* () {
-            const comment = yield octokit_1.octokit.issues.getComment(Object.assign(Object.assign({}, context.repository), { comment_id: context.commentId }));
-            yield octokit_1.octokit.repos.createDeploymentStatus(Object.assign(Object.assign({}, context.repository), { deployment_id: context.deploymentId, state: 'pending' }));
-            yield octokit_1.octokit.issues.updateComment(Object.assign(Object.assign({}, context.repository), { comment_id: context.commentId, body: utils.appendBody(comment.data.body || '', `${utils.Icon.HourGlass} Deployment starting soon...`) }));
+            const { repository, deploymentId } = chatops.context;
+            if (!deploymentId) {
+                chatops.setFailed('No deployment ID available...');
+                return;
+            }
+            yield chatops.octokit.repos.createDeploymentStatus(Object.assign(Object.assign({}, repository), { deployment_id: deploymentId, state: 'pending' }));
+            chatops.info('Deployment starting soon...', {
+                icon: chatops.Icon.HourGlass,
+                shouldUpdateComment: true
+            });
         });
     }
 });
@@ -1050,16 +1386,21 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.deploymentSuccess = void 0;
 const actionSlasher = __importStar(__webpack_require__(1558));
-const context = __importStar(__webpack_require__(3842));
-const octokit_1 = __webpack_require__(3258);
-const utils = __importStar(__webpack_require__(918));
+const chatops = __importStar(__webpack_require__(9032));
 exports.deploymentSuccess = actionSlasher.event('deployment-success', {
     description: 'An event triggered when a deployment is successful',
     handler() {
         return __awaiter(this, void 0, void 0, function* () {
-            const comment = yield octokit_1.octokit.issues.getComment(Object.assign(Object.assign({}, context.repository), { comment_id: context.commentId }));
-            yield octokit_1.octokit.repos.createDeploymentStatus(Object.assign(Object.assign({}, context.repository), { deployment_id: context.deploymentId, state: 'success' }));
-            yield octokit_1.octokit.issues.updateComment(Object.assign(Object.assign({}, context.repository), { comment_id: context.commentId, body: utils.appendBody(comment.data.body || '', `${utils.Icon.Check} Deployment finished with success!`) }));
+            const { repository, deploymentId } = chatops.context;
+            if (!deploymentId) {
+                chatops.setFailed('No deployment ID available...');
+                return;
+            }
+            yield chatops.octokit.repos.createDeploymentStatus(Object.assign(Object.assign({}, repository), { deployment_id: deploymentId, state: 'success' }));
+            chatops.info('Deployment finished with success!', {
+                icon: chatops.Icon.Check,
+                shouldUpdateComment: true
+            });
         });
     }
 });
@@ -1128,81 +1469,20 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__webpack_require__(2186));
-const github = __importStar(__webpack_require__(5438));
 const actionSlasher = __importStar(__webpack_require__(1558));
 const commands = __importStar(__webpack_require__(8976));
-const context = __importStar(__webpack_require__(3842));
+const chatops = __importStar(__webpack_require__(9032));
 const events = __importStar(__webpack_require__(2249));
 const run = () => __awaiter(void 0, void 0, void 0, function* () {
-    core.debug(`Payload: ${JSON.stringify(context.payload, null, 2)}`);
-    core.debug(`GitHub Context: ${JSON.stringify(github.context, null, 2)}`);
-    actionSlasher.run({ commands, events });
+    core.debug(`Payload: ${JSON.stringify(chatops.context.payload, null, 2)}`);
+    try {
+        actionSlasher.run({ commands, events });
+    }
+    catch (error) {
+        core.setFailed(error.message || error);
+    }
 });
 run();
-
-
-/***/ }),
-
-/***/ 3258:
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.octokit = void 0;
-const core = __importStar(__webpack_require__(2186));
-const github = __importStar(__webpack_require__(5438));
-exports.octokit = github.getOctokit(core.getInput('token', { required: true }), { previews: ['flash', 'ant-man'] });
-
-
-/***/ }),
-
-/***/ 918:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.appendBody = exports.trimBody = exports.Icon = void 0;
-var Icon;
-(function (Icon) {
-    Icon["Clock"] = "\uD83D\uDD50";
-    Icon["Rocket"] = "\uD83D\uDE80";
-    Icon["ArrowRight"] = "\u27A1\uFE0F";
-    Icon["Check"] = "\u2705";
-    Icon["HourGlass"] = "\u23F3";
-    Icon["FastForward"] = "\u23E9";
-    Icon["Cry"] = "\uD83D\uDE22";
-    Icon["Error"] = "\u274C";
-    Icon["BlackCircle"] = "\u26AB";
-    Icon["Info"] = "\u2139\uFE0F";
-})(Icon = exports.Icon || (exports.Icon = {}));
-const trimBody = (body) => body
-    .split('\n')
-    .map(l => l.trimStart())
-    .join('\n');
-exports.trimBody = trimBody;
-const appendBody = (original, body) => exports.trimBody(`${original}\n${body}`);
-exports.appendBody = appendBody;
 
 
 /***/ }),
