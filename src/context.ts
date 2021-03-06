@@ -58,7 +58,7 @@ export const payload = eventPayload
   ? {...github.context.payload, ...eventPayload}
   : github.context.payload
 
-export const isPullRequest = !!payload.pull_request
+export const isPullRequest = !!github.context.payload.issue?.pull_request
 
 export const issueNumber = payload.issue?.number
 
