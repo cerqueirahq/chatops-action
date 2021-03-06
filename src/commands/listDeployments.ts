@@ -52,6 +52,24 @@ export const listDeployments = actionSlasher.command('list-deployments', {
       })
     )
 
+    if (deployments.length === 0) {
+      chatops.info(`
+      _No deployments found for ${
+        env ? `environment ${env}` : 'any environment'
+      }, reference ${ref} and ${state ? `state ${state}` : 'any state'}._
+      
+      You can trigger a new deployment with the command:
+
+      \`\`\`
+      /deploy --env <${chatops.context.environments
+        .map(({name}) => name)
+        .join(' | ')}>
+      \`\`\`
+      `)
+
+      return
+    }
+
     const table = `
     | ID | Environment | Ref | State | Created by |
     | -- | ----------- | --- | ----- | ---------- |
