@@ -61,8 +61,7 @@ export class Context {
 
     this.message = core.getInput('message')
 
-    // @ts-expect-error FIXME
-    this.isPullRequest = !!github.context.payload.issue.pull_request
+    this.isPullRequest = !!github.context.payload.issue?.pull_request
 
     this._octokit = octokit
   }
