@@ -83,7 +83,7 @@ export const listDeployments = actionSlasher.command('list-deployments', {
       .map(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (deployment: any) =>
-          `| ${deployment.id} | ${deployment.environment} | ${deployment.ref.name} | ${deployment.state} | @${deployment.creator?.login} |`
+          `| ${deployment.databaseId} | ${deployment.environment} | ${deployment.ref.name} | ${deployment.state} | @${deployment.creator?.login} |`
       )
       .join('\n')}
     `
