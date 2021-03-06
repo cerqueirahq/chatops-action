@@ -437,20 +437,25 @@ class Log {
     }
     updateComment(message, options) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!this._context.commentId) {
-                return;
+            try {
+                if (!this._context.commentId || !(options === null || options === void 0 ? void 0 : options.shouldUpdateComment)) {
+                    return;
+                }
+                const reqOptions = Object.assign(Object.assign({}, this._context.repository), { comment_id: this._context.commentId });
+                const getResp = yield this._octokit.issues.getComment(reqOptions);
+                if (getResp.status !== 200) {
+                    return;
+                }
+                const body = this.appendBody(getResp.data.body || '', `${(options === null || options === void 0 ? void 0 : options.icon) ? `${options.icon} ` : ''} ${message}`);
+                const updateResp = yield this._octokit.issues.updateComment(Object.assign(Object.assign({}, reqOptions), { body }));
+                return {
+                    id: updateResp.data.id,
+                    body: updateResp.data.body
+                };
             }
-            const reqOptions = Object.assign(Object.assign({}, this._context.repository), { comment_id: this._context.commentId });
-            const getResp = yield this._octokit.issues.getComment(reqOptions);
-            if (getResp.status !== 200) {
-                return;
+            catch (error) {
+                this.setFailed(`Failed to update comment: ${JSON.stringify(error, null, 2)}`, { shouldUpdateComment: false });
             }
-            const body = this.appendBody(getResp.data.body || '', `${(options === null || options === void 0 ? void 0 : options.icon) ? `${options.icon} ` : ''} ${message}`);
-            const updateResp = yield this._octokit.issues.updateComment(Object.assign(Object.assign({}, reqOptions), { body }));
-            return {
-                id: updateResp.data.id,
-                body: updateResp.data.body
-            };
         });
     }
     trimBody(body) {
@@ -695,20 +700,25 @@ class Log {
     }
     updateComment(message, options) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!this._context.commentId) {
-                return;
+            try {
+                if (!this._context.commentId || !(options === null || options === void 0 ? void 0 : options.shouldUpdateComment)) {
+                    return;
+                }
+                const reqOptions = Object.assign(Object.assign({}, this._context.repository), { comment_id: this._context.commentId });
+                const getResp = yield this._octokit.issues.getComment(reqOptions);
+                if (getResp.status !== 200) {
+                    return;
+                }
+                const body = this.appendBody(getResp.data.body || '', `${(options === null || options === void 0 ? void 0 : options.icon) ? `${options.icon} ` : ''} ${message}`);
+                const updateResp = yield this._octokit.issues.updateComment(Object.assign(Object.assign({}, reqOptions), { body }));
+                return {
+                    id: updateResp.data.id,
+                    body: updateResp.data.body
+                };
             }
-            const reqOptions = Object.assign(Object.assign({}, this._context.repository), { comment_id: this._context.commentId });
-            const getResp = yield this._octokit.issues.getComment(reqOptions);
-            if (getResp.status !== 200) {
-                return;
+            catch (error) {
+                this.setFailed(`Failed to update comment: ${JSON.stringify(error, null, 2)}`, { shouldUpdateComment: false });
             }
-            const body = this.appendBody(getResp.data.body || '', `${(options === null || options === void 0 ? void 0 : options.icon) ? `${options.icon} ` : ''} ${message}`);
-            const updateResp = yield this._octokit.issues.updateComment(Object.assign(Object.assign({}, reqOptions), { body }));
-            return {
-                id: updateResp.data.id,
-                body: updateResp.data.body
-            };
         });
     }
     trimBody(body) {

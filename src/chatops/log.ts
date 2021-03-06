@@ -97,34 +97,41 @@ export class Log {
     message: string,
     options?: LogOptions
   ): Promise<Comment | undefined> {
-    if (!this._context.commentId) {
-      return
-    }
+    try {
+      if (!this._context.commentId || !options?.shouldUpdateComment) {
+        return
+      }
 
-    const reqOptions = {
-      ...this._context.repository,
-      comment_id: this._context.commentId
-    }
+      const reqOptions = {
+        ...this._context.repository,
+        comment_id: this._context.commentId
+      }
 
-    const getResp = await this._octokit.issues.getComment(reqOptions)
+      const getResp = await this._octokit.issues.getComment(reqOptions)
 
-    if (getResp.status !== 200) {
-      return
-    }
+      if (getResp.status !== 200) {
+        return
+      }
 
-    const body = this.appendBody(
-      getResp.data.body || '',
-      `${options?.icon ? `${options.icon} ` : ''} ${message}`
-    )
+      const body = this.appendBody(
+        getResp.data.body || '',
+        `${options?.icon ? `${options.icon} ` : ''} ${message}`
+      )
 
-    const updateResp = await this._octokit.issues.updateComment({
-      ...reqOptions,
-      body
-    })
+      const updateResp = await this._octokit.issues.updateComment({
+        ...reqOptions,
+        body
+      })
 
-    return {
-      id: updateResp.data.id,
-      body: updateResp.data.body
+      return {
+        id: updateResp.data.id,
+        body: updateResp.data.body
+      }
+    } catch (error) {
+      this.setFailed(
+        `Failed to update comment: ${JSON.stringify(error, null, 2)}`,
+        {shouldUpdateComment: false}
+      )
     }
   }
 
