@@ -1,43 +1,23 @@
 import * as core from '@actions/core'
-import * as github from '@actions/github'
-import {getCommandContextFromString, handleCommand} from './command'
-import {getConfigFromInputs} from './config'
-import {handleEvent} from './event'
-import {updateComment} from './github'
+import * as actionSlasher from './action-slasher'
+import * as commands from './commands'
+import * as chatops from './chatops'
+import * as events from './events'
 
-async function run(): Promise<void> {
-  const config = getConfigFromInputs()
-  const commentId = github.context?.payload.comment?.id!
-
-  core.debug(`Using configuration: ${JSON.stringify(config, null, 2)}`)
+const run = async (): Promise<void> => {
+  core.debug(`Payload: ${JSON.stringify(chatops.context.payload, null, 2)}`)
+  core.debug(`Project: ${chatops.context.project}`)
+  core.debug(`Repository: ${chatops.context.repository}`)
+  core.debug(`Comment ID: ${chatops.context.commentId}`)
+  core.debug(`Deployment ID: ${chatops.context.deploymentId}`)
+  core.debug(
+    `Issue Number: ${chatops.context.issueNumber} (pr? ${chatops.context.isPullRequest})`
+  )
 
   try {
-    if (config.event) {
-      handleEvent(config)
-
-      return
-    }
-
-    const commentBody: string = github.context.payload.comment?.body!
-
-    core.debug(`Comment ${commentId}: ${commentBody}`)
-
-    const commandContext = getCommandContextFromString(commentId, commentBody)
-
-    if (!commandContext) {
-      core.debug('Neither a command or an event was detected... Skipping')
-      return
-    }
-
-    handleCommand(commandContext, config)
-
-    core.debug('Hello, ChatOps!')
+    await actionSlasher.run({commands, events})
   } catch (error) {
-    if (commentId) {
-      await updateComment(commentId, error.message)
-    }
-
-    core.setFailed(error.message)
+    core.setFailed(error.message || error)
   }
 }
 

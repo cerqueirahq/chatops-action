@@ -1,0 +1,11 @@
+{
+  "comment": {
+    "id": "791443123",
+    "body": "/deploy --env production"
+  },
+  "pull_request": {
+    "head": {
+      "ref": "test/test-action"
+    }
+  }
+}

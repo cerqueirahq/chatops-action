@@ -5,6 +5,16 @@ on:
     types: [chatops-deploy]
 
 jobs:
+  boot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./
+        with:
+          token: ${{ github.token }}
+          event: deployment-pending
+          payload: ${{ github.event.client_payload }}
+
   start:
     runs-on: ubuntu-latest
     steps:
@@ -13,7 +23,7 @@ jobs:
         with:
           token: ${{ github.token }}
           event: deployment-in-progress
-          context: ${{ github.event.client_payload.chatops }}
+          payload: ${{ github.event.client_payload }}
 
   finish:
     runs-on: ubuntu-latest
@@ -23,4 +33,4 @@ jobs:
         with:
           token: ${{ secrets.CHATOPS_TOKEN }}
           event: deployment-success
-          context: ${{ github.event.client_payload.chatops }}
+          payload: ${{ github.event.client_payload }}

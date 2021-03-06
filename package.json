@@ -27,7 +27,9 @@
   "dependencies": {
     "@actions/core": "^1.2.6",
     "@actions/github": "^4.0.0",
-    "@octokit/core": "^3.2.5"
+    "@octokit/core": "^3.2.5",
+    "arg": "^5.0.0",
+    "gh-polls": "^1.1.0"
   },
   "devDependencies": {
     "@types/jest": "^26.0.15",
