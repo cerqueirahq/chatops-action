@@ -551,7 +551,11 @@ class Context {
         return this.environments.find(env => env.default);
     }
     inputFromJSON(name, fallback, options) {
-        return JSON.parse(core.getInput(name, options) || JSON.stringify(fallback));
+        const input = core.getInput(name, options);
+        if (!input) {
+            return fallback;
+        }
+        return JSON.parse(input);
     }
 }
 exports.Context = Context;
