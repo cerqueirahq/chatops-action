@@ -9,7 +9,11 @@ const run = async (): Promise<void> => {
   core.debug(`Payload: ${JSON.stringify(context.payload, null, 2)}`)
   core.debug(`GitHub Context: ${JSON.stringify(github.context, null, 2)}`)
 
-  actionSlasher.run({commands, events})
+  try {
+    actionSlasher.run({commands, events})
+  } catch (error) {
+    core.setFailed(error.message || error)
+  }
 }
 
 run()
