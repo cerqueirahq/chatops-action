@@ -46,18 +46,18 @@ export const listDeployments = actionSlasher.command('list-deployments', {
         return {
           deployment,
           status: state
-            ? statuses[0]
-            : statuses.find(status => status.state === state)
+            ? statuses.find(status => status.state === state)
+            : statuses[0]
         }
       })
     )
 
     const table = `
-    | ID | Environment | State | URL |
-    | -- | ----------- | ----- | --- |
+    | ID | Environment | Ref | State | Created by |
+    | -- | ----------- | --- | ----- | ---------- |
     ${deployments.map(
       ({deployment, status}) =>
-        `| ${deployment.id} | ${deployment.environment} | ${status?.state} | ${deployment.url} |`
+        `| [${deployment.id}](${deployment.url}) | ${deployment.environment} | ${deployment.ref} | ${status?.state} | @${deployment.creator?.login} |`
     )}
     `
 

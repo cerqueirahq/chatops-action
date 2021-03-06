@@ -955,14 +955,14 @@ exports.listDeployments = actionSlasher.command('list-deployments', {
                 return {
                     deployment,
                     status: state
-                        ? statuses[0]
-                        : statuses.find(status => status.state === state)
+                        ? statuses.find(status => status.state === state)
+                        : statuses[0]
                 };
             })));
             const table = `
-    | ID | Environment | State | URL |
-    | -- | ----------- | ----- | --- |
-    ${deployments.map(({ deployment, status }) => `| ${deployment.id} | ${deployment.environment} | ${status === null || status === void 0 ? void 0 : status.state} | ${deployment.url} |`)}
+    | ID | Environment | Ref | State | Created by |
+    | -- | ----------- | --- | ----- | ---------- |
+    ${deployments.map(({ deployment, status }) => { var _a; return `| [${deployment.id}](${deployment.url}) | ${deployment.environment} | ${deployment.ref} | ${status === null || status === void 0 ? void 0 : status.state} | @${(_a = deployment.creator) === null || _a === void 0 ? void 0 : _a.login} |`; })}
     `;
             chatops.info(table, {
                 icon: undefined,
