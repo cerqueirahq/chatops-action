@@ -76,7 +76,12 @@ export function run({
       return
     }
 
-    cmd.handler(args)
+    try {
+      cmd.handler(args)
+    } catch (err) {
+      core.error(`Error caught in ActionSlasher: ${err.message}`)
+      core.setFailed(err.message)
+    }
 
     return
   }
