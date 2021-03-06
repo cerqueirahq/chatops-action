@@ -835,6 +835,7 @@ exports.deploy = actionSlasher.command('deploy', {
                 return;
             }
             const deploymentOptions = Object.assign(Object.assign({}, repository), { ref: yield chatops.context.fetchRef(), environment: environment.name, environment_url: environment.url, description: `Triggered in PR #${chatops.context.issueNumber}` });
+            chatops.debug(`Ref: ${deploymentOptions.ref}`);
             let deployment = yield chatops.octokit.repos.createDeployment(deploymentOptions);
             // Status code === 202 means GitHub performed an auto-merge
             // and we have to attempt creating the deployment again
@@ -1364,7 +1365,7 @@ const events = __importStar(__webpack_require__(2249));
 const run = () => __awaiter(void 0, void 0, void 0, function* () {
     core.debug(`Payload: ${JSON.stringify(chatops.context.payload, null, 2)}`);
     core.debug(`Project: ${chatops.context.project}`);
-    core.debug(`Repository: ${chatops.context.repository}`);
+    core.debug(`Repository: ${JSON.stringify(chatops.context.repository, null, 2)}`);
     core.debug(`Comment ID: ${chatops.context.commentId}`);
     core.debug(`Deployment ID: ${chatops.context.deploymentId}`);
     core.debug(`Issue Number: ${chatops.context.issueNumber} (pr? ${chatops.context.isPullRequest})`);

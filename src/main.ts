@@ -7,7 +7,9 @@ import * as events from './events'
 const run = async (): Promise<void> => {
   core.debug(`Payload: ${JSON.stringify(chatops.context.payload, null, 2)}`)
   core.debug(`Project: ${chatops.context.project}`)
-  core.debug(`Repository: ${chatops.context.repository}`)
+  core.debug(
+    `Repository: ${JSON.stringify(chatops.context.repository, null, 2)}`
+  )
   core.debug(`Comment ID: ${chatops.context.commentId}`)
   core.debug(`Deployment ID: ${chatops.context.deploymentId}`)
   core.debug(
