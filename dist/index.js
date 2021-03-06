@@ -387,7 +387,7 @@ const core = __importStar(__webpack_require__(2186));
 const github = __importStar(__webpack_require__(5438));
 class Context {
     constructor(octokit) {
-        var _a;
+        var _a, _b;
         const { repo } = github.context;
         this.payload = this.inputFromJSON('payload', {
             environments: this.inputFromJSON('environments', [], {
@@ -406,8 +406,7 @@ class Context {
         this.issueNumber = this.payload.issueNumber;
         this.commentId = this.payload.commentId;
         this.message = core.getInput('message');
-        // @ts-expect-error FIXME
-        this.isPullRequest = !!github.context.payload.issue.pull_request;
+        this.isPullRequest = !!((_b = github.context.payload.issue) === null || _b === void 0 ? void 0 : _b.pull_request);
         this._octokit = octokit;
     }
     get processor() {
