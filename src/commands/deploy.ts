@@ -83,7 +83,7 @@ export const deploy = actionSlasher.command('deploy', {
       description: `Triggered in PR #${chatops.context.issueNumber}`
     }
 
-    chatops.debug(`Ref: ${deploymentOptions.ref}`)
+    chatops.debug(`DeploymentOptions: ${deploymentOptions}`)
 
     let deployment = await chatops.octokit.repos.createDeployment(
       deploymentOptions
