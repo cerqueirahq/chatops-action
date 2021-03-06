@@ -16,6 +16,7 @@ export interface Repository {
 }
 
 export interface Payload {
+  environments: Environment[]
   project: string
   processor: Repository
   repository: Repository
@@ -38,11 +39,12 @@ export class Context {
   private _octokit: InstanceType<typeof GitHub>
 
   constructor(octokit: InstanceType<typeof GitHub>) {
-    this.environments = this.inputFromJSON('environments', [], {required: true})
-
     const {repo} = github.context
 
     this.payload = this.inputFromJSON('payload', {
+      environments: this.inputFromJSON('environments', [], {
+        required: false
+      }),
       issueNumber: github.context.issue.number,
       commentId: github.context.payload.comment?.id,
       repository: repo,
@@ -50,6 +52,7 @@ export class Context {
       project: core.getInput('project') || `${repo.owner}/${repo.repo}`
     })
 
+    this.environments = this.payload.environments
     this.project = this.payload.project
     this.repository = this.payload.repository
     this.deploymentId = this.payload.deploymentId

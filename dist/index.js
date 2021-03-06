@@ -388,15 +388,18 @@ const github = __importStar(__webpack_require__(5438));
 class Context {
     constructor(octokit) {
         var _a;
-        this.environments = this.inputFromJSON('environments', [], { required: true });
         const { repo } = github.context;
         this.payload = this.inputFromJSON('payload', {
+            environments: this.inputFromJSON('environments', [], {
+                required: false
+            }),
             issueNumber: github.context.issue.number,
             commentId: (_a = github.context.payload.comment) === null || _a === void 0 ? void 0 : _a.id,
             repository: repo,
             processor: this.processor,
             project: core.getInput('project') || `${repo.owner}/${repo.repo}`
         });
+        this.environments = this.payload.environments;
         this.project = this.payload.project;
         this.repository = this.payload.repository;
         this.deploymentId = this.payload.deploymentId;
