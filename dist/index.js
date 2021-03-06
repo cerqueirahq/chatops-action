@@ -856,7 +856,7 @@ exports.deploy = actionSlasher.command('deploy', {
             // Set the status of the deployment to queued as it'll be triggered
             // by another workflow which will start in the same state
             yield chatops.octokit.repos.createDeploymentStatus(Object.assign(Object.assign({}, repository), { deployment_id: deployment.data.id, state: 'queued' }));
-            yield chatops.octokit.repos.createDispatchEvent(Object.assign(Object.assign({}, chatops.context.processor), { event_type: 'chatops-deploy', client_payload: chatops.context.payload }));
+            yield chatops.octokit.repos.createDispatchEvent(Object.assign(Object.assign({}, chatops.context.processor), { event_type: 'chatops-deploy', client_payload: Object.assign(Object.assign({}, chatops.context.payload), { deploymentId: deployment.data.id }) }));
             chatops.info(`\n${chatops.Icon.Clock} Deployment of \`${deploymentOptions.ref}\` to \`${environment.name}\` has been queued (ID: ${deployment.data.id})...`, { icon: undefined, shouldUpdateComment: true });
         });
     }
