@@ -927,6 +927,25 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.listDeployments = void 0;
 const actionSlasher = __importStar(__webpack_require__(1558));
 const chatops = __importStar(__webpack_require__(9032));
+const query = `
+query ListRepositoryDeployments($owner: String!, $repo: String!) {
+  repository(owner: $owner, name: $repo) {
+    deployments(last: 100) {
+      nodes {
+        id
+        ref {
+            name
+        }
+        environment
+        state
+        creator {
+          login
+        }
+      }
+    }
+  }
+}
+`;
 exports.listDeployments = actionSlasher.command('list-deployments', {
     description: 'Lists all deployments for a specific reference',
     definition(c) {
@@ -950,20 +969,10 @@ exports.listDeployments = actionSlasher.command('list-deployments', {
             // @ts-expect-error FIXME
             const { env, state } = args;
             const { repository } = chatops.context;
-            const envs = env
-                ? [env]
-                : chatops.context.environments.map(({ name }) => name);
-            const deployments = (yield Promise.all(envs.map((e) => __awaiter(this, void 0, void 0, function* () {
-                return yield Promise.all((yield chatops.octokit.repos.listDeployments(Object.assign(Object.assign({}, repository), { ref, environment: e, per_page: 100 }))).data.map((deployment) => __awaiter(this, void 0, void 0, function* () {
-                    const statuses = (yield chatops.octokit.repos.listDeploymentStatuses(Object.assign(Object.assign({}, repository), { deployment_id: deployment.id }))).data;
-                    return {
-                        deployment,
-                        status: state
-                            ? statuses.find(status => status.state === state)
-                            : statuses[0]
-                    };
-                })));
-            })))).flat();
+            // const envs = env
+            //  ? [env]
+            //  : chatops.context.environments.map(({name}) => name)
+            const { repository: { deployments: { nodes: deployments } } } = yield chatops.octokit.graphql(query, Object.assign({}, repository));
             if (deployments.length === 0) {
                 chatops.info(`
       _No deployments found for ${env ? `environment ${env}` : 'any environment'}, reference ${ref} and ${state ? `state ${state}` : 'any state'}._
@@ -981,7 +990,9 @@ exports.listDeployments = actionSlasher.command('list-deployments', {
             const table = `
     | ID | Environment | Ref | State | Created by |
     | -- | ----------- | --- | ----- | ---------- |
-    ${deployments.map(({ deployment, status }) => { var _a; return `| [${deployment.id}](${deployment.url}) | ${deployment.environment} | ${deployment.ref} | ${status === null || status === void 0 ? void 0 : status.state} | @${(_a = deployment.creator) === null || _a === void 0 ? void 0 : _a.login} |`; })}
+    ${deployments.map(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (deployment) => { var _a; return `| [${deployment.id}](${deployment.url}) | ${deployment.environment} | ${deployment.ref} | ${deployment.state} | @${(_a = deployment.creator) === null || _a === void 0 ? void 0 : _a.login} |`; })}
     `;
             chatops.info(table, {
                 icon: undefined,

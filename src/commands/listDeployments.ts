@@ -1,6 +1,26 @@
 import * as actionSlasher from '../action-slasher'
 import * as chatops from '../chatops'
 
+const query = `
+query ListRepositoryDeployments($owner: String!, $repo: String!) {
+  repository(owner: $owner, name: $repo) {
+    deployments(last: 100) {
+      nodes {
+        id
+        ref {
+            name
+        }
+        environment
+        state
+        creator {
+          login
+        }
+      }
+    }
+  }
+}
+`
+
 export const listDeployments = actionSlasher.command('list-deployments', {
   description: 'Lists all deployments for a specific reference',
   definition(c) {
@@ -28,41 +48,15 @@ export const listDeployments = actionSlasher.command('list-deployments', {
 
     const {repository} = chatops.context
 
-    const envs = env
-      ? [env]
-      : chatops.context.environments.map(({name}) => name)
+    // const envs = env
+    //  ? [env]
+    //  : chatops.context.environments.map(({name}) => name)
 
-    const deployments = (
-      await Promise.all(
-        envs.map(
-          async e =>
-            await Promise.all(
-              (
-                await chatops.octokit.repos.listDeployments({
-                  ...repository,
-                  ref,
-                  environment: e,
-                  per_page: 100
-                })
-              ).data.map(async deployment => {
-                const statuses = (
-                  await chatops.octokit.repos.listDeploymentStatuses({
-                    ...repository,
-                    deployment_id: deployment.id
-                  })
-                ).data
-
-                return {
-                  deployment,
-                  status: state
-                    ? statuses.find(status => status.state === state)
-                    : statuses[0]
-                }
-              })
-            )
-        )
-      )
-    ).flat()
+    const {
+      repository: {
+        deployments: {nodes: deployments}
+      }
+    } = await chatops.octokit.graphql(query, {...repository})
 
     if (deployments.length === 0) {
       chatops.info(`
@@ -86,8 +80,9 @@ export const listDeployments = actionSlasher.command('list-deployments', {
     | ID | Environment | Ref | State | Created by |
     | -- | ----------- | --- | ----- | ---------- |
     ${deployments.map(
-      ({deployment, status}) =>
-        `| [${deployment.id}](${deployment.url}) | ${deployment.environment} | ${deployment.ref} | ${status?.state} | @${deployment.creator?.login} |`
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (deployment: any) =>
+        `| [${deployment.id}](${deployment.url}) | ${deployment.environment} | ${deployment.ref} | ${deployment.state} | @${deployment.creator?.login} |`
     )}
     `
 
