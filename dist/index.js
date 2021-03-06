@@ -936,6 +936,7 @@ query ListRepositoryDeployments($owner: String!, $repo: String!) {
         ref {
             name
         }
+        databaseId
         environment
         state
         creator {
