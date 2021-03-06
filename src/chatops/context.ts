@@ -41,10 +41,10 @@ export class Context {
     this.repository = this.payload.repo
     this.message = core.getInput('message')
 
-    // FIXME
-    this.isPullRequest = true
+    // @ts-expect-error FIXME
+    this.isPullRequest = github.context.issue.pull_request
 
-    core.debug(`====> ${github.context}`)
+    core.debug(`====> ${JSON.stringify(github.context)}`)
 
     this.project =
       core.getInput('project') ||

@@ -517,9 +517,9 @@ class Context {
         this.commentId = (_a = this.payload.payload.comment) === null || _a === void 0 ? void 0 : _a.id;
         this.repository = this.payload.repo;
         this.message = core.getInput('message');
-        // FIXME
-        this.isPullRequest = true;
-        core.debug(`====> ${github.context}`);
+        // @ts-expect-error FIXME
+        this.isPullRequest = github.context.issue.pull_request;
+        core.debug(`====> ${JSON.stringify(github.context)}`);
         this.project =
             core.getInput('project') ||
                 `${this.repository.owner}/${this.repository.repo}`;
@@ -1478,6 +1478,10 @@ const chatops = __importStar(__webpack_require__(9032));
 const events = __importStar(__webpack_require__(2249));
 const run = () => __awaiter(void 0, void 0, void 0, function* () {
     core.debug(`Payload: ${JSON.stringify(chatops.context.payload, null, 2)}`);
+    core.debug(`Project : ${chatops.context.project}`);
+    core.debug(`Comment ID: ${chatops.context.commentId}`);
+    core.debug(`Deployment ID: ${chatops.context.deploymentId}`);
+    core.debug(`Issue Number: ${chatops.context.issueNumber} (pr? ${chatops.context.isPullRequest})`);
     try {
         actionSlasher.run({ commands, events });
     }
