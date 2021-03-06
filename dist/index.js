@@ -557,12 +557,7 @@ exports.deploy = actionSlasher.command('deploy', {
             // Set the status of the deployment to queued as it'll be triggered
             // by another workflow which will start in the same state
             yield octokit_1.octokit.repos.createDeploymentStatus(Object.assign(Object.assign({}, context.repository), { deployment_id: deployment.data.id, state: 'queued' }));
-            const eventPayload = {
-                chatops: {
-                    deploymentId: deployment.data.id,
-                    originalPayload: context.payload
-                }
-            };
+            const eventPayload = Object.assign(Object.assign({}, context.payload), { deploymentId: deployment.data.id });
             yield octokit_1.octokit.repos.createDispatchEvent(Object.assign(Object.assign({}, context.processor), { event_type: 'chatops-deploy', client_payload: eventPayload }));
             if (context.commentId) {
                 yield octokit_1.octokit.issues.updateComment(Object.assign(Object.assign({}, context.repository), { comment_id: context.commentId, body: utils.appendBody(context.commentBody, `\n${utils.Icon.Clock} Deployment of \`${context.ref}\` to \`${environment.name}\` has been queued (ID: ${deployment.data.id})...`) }));
@@ -699,7 +694,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var _a, _b, _c, _d, _e;
+var _a, _b, _c, _d, _e, _f, _g;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.log = exports.deploymentId = exports.processor = exports.repository = exports.ref = exports.commentBody = exports.commentId = exports.issueNumber = exports.isPullRequest = exports.payload = exports.findDefaultEnvironment = exports.findEnvironment = exports.environments = void 0;
 const core = __importStar(__webpack_require__(2186));
@@ -742,11 +737,11 @@ const findDefaultEnvironment = () => exports.environments.find(env => env.defaul
 exports.findDefaultEnvironment = findDefaultEnvironment;
 exports.payload = eventPayload
     ? Object.assign(Object.assign({}, github.context.payload), eventPayload) : github.context.payload;
-exports.isPullRequest = !!((_a = github.context.payload.issue) === null || _a === void 0 ? void 0 : _a.pull_request);
+exports.isPullRequest = !!((_a = exports.payload.issue) === null || _a === void 0 ? void 0 : _a.pull_request);
 exports.issueNumber = (_b = exports.payload.issue) === null || _b === void 0 ? void 0 : _b.number;
 exports.commentId = (_c = exports.payload.comment) === null || _c === void 0 ? void 0 : _c.id;
 exports.commentBody = (_d = exports.payload.comment) === null || _d === void 0 ? void 0 : _d.body;
-exports.ref = (_e = exports.payload.pull_request) === null || _e === void 0 ? void 0 : _e.head.ref;
+exports.ref = (_g = (_f = (_e = exports.payload.issue) === null || _e === void 0 ? void 0 : _e.pull_request) === null || _f === void 0 ? void 0 : _f.head) === null || _g === void 0 ? void 0 : _g.ref;
 exports.repository = exports.payload.repo || github.context.repo;
 exports.processor = { owner: processorOwner, repo: processorRepo };
 exports.deploymentId = exports.payload.deploymentId;
