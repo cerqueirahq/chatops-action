@@ -835,6 +835,7 @@ exports.deploy = actionSlasher.command('deploy', {
                 return;
             }
             const deploymentOptions = Object.assign(Object.assign({}, repository), { ref: yield chatops.context.fetchRef(), environment: environment.name, environment_url: environment.url, description: `Triggered in PR #${chatops.context.issueNumber}` });
+            chatops.debug(`Ref: ${deploymentOptions.ref}`);
             let deployment = yield chatops.octokit.repos.createDeployment(deploymentOptions);
             // Status code === 202 means GitHub performed an auto-merge
             // and we have to attempt creating the deployment again
